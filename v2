@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DocsHelper</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+body { background: #1e1e1e; color: #fff; max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+.header { background: #217346; padding: 14px 16px 12px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+.logo { width: 36px; height: 36px; background: #185c37; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; border: 1px solid #21a366; }
+.header-title { font-size: 16px; font-weight: 600; color: #fff; }
+.header-sub { font-size: 11px; color: #c9e8d4; margin-top: 1px; }
+.badge { background: #185c37; color: #21a366; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 3px 10px; margin-left: auto; border: 0.5px solid #21a366; }
+.content { flex: 1; overflow-y: auto; padding-bottom: 70px; }
+.section { padding: 14px 16px 0; }
+.section-title { font-size: 11px; font-weight: 600; color: #21a366; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+.plan-card { background: #252525; border: 1px solid #217346; border-radius: 6px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.plan-icon { width: 34px; height: 34px; background: #217346; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.plan-name { font-size: 14px; font-weight: 600; color: #fff; }
+.plan-info { font-size: 11px; color: #9e9e9e; margin-top: 2px; }
+.plan-btn { margin-left: auto; background: #217346; color: #fff; border: none; border-radius: 4px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.stat { background: #252525; border: 0.5px solid #333; border-radius: 6px; padding: 10px 12px; border-left: 3px solid #217346; }
+.stat-val { font-size: 20px; font-weight: 600; color: #21a366; }
+.stat-lbl { font-size: 11px; color: #9e9e9e; margin-top: 2px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.btn-card { background: #252525; border: 0.5px solid #333; border-radius: 6px; padding: 12px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; cursor: pointer; transition: background 0.15s, border-color 0.15s; active-opacity: 0.7; }
+.btn-card:active { background: #2d3d34; border-color: #217346; transform: scale(0.97); }
+.btn-icon { font-size: 20px; }
+.btn-label { font-size: 12px; font-weight: 600; color: #fff; line-height: 1.3; }
+.btn-desc { font-size: 10px; color: #9e9e9e; }
+.bottom-nav { background: #1a1a1a; border-top: 0.5px solid #333; display: flex; position: fixed; bottom: 0; left: 0; right: 0; max-width: 480px; margin: 0 auto; z-index: 10; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px 8px; gap: 3px; cursor: pointer; }
+.nav-icon { font-size: 20px; }
+.nav-lbl { font-size: 10px; color: #9e9e9e; }
+.nav-item.active .nav-lbl { color: #21a366; }
+.page { display: none; }
+.page.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">📋</div>
+  <div>
+    <div class="header-title">DocsHelper</div>
+    <div class="header-sub">AI-помощник для документов</div>
+  </div>
+  <div class="badge" id="plan-badge">Пробный</div>
+</div>
+
+<div class="content">
+
+  <!-- Главная -->
+  <div class="page active" id="page-home">
+    <div class="section">
+      <div class="section-title">Моя подписка</div>
+      <div class="plan-card">
+        <div class="plan-icon">💎</div>
+        <div>
+          <div class="plan-name" id="plan-name">Пробный</div>
+          <div class="plan-info" id="plan-info">Загрузка...</div>
+        </div>
+        <button class="plan-btn" onclick="send('💎 Моя подписка')">Подробнее</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Статистика сегодня</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-val" id="stat-req">—</div>
+          <div class="stat-lbl">Запросов сегодня</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="stat-doc">—</div>
+          <div class="stat-lbl">Документов сегодня</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Создать документ</div>
+      <div class="grid2">
+        <div class="btn-card" onclick="send('📄 Создать документ')">
+          <div class="btn-icon">📄</div>
+          <div class="btn-label">Создать документ</div>
+          <div class="btn-desc">Word по ГОСТу</div>
+        </div>
+        <div class="btn-card" onclick="send('⚡ Срочный документ')">
+          <div class="btn-icon">⚡</div>
+          <div class="btn-label">Срочный документ</div>
+          <div class="btn-desc">Быстро и готово</div>
+        </div>
+        <div class="btn-card" onclick="send('✍️ Повысить оригинальность')">
+          <div class="btn-icon">✍️</div>
+          <div class="btn-label">Оригинальность</div>
+          <div class="btn-desc">Переписать текст</div>
+        </div>
+        <div class="btn-card" onclick="send('🎓 Помощь с заданием')">
+          <div class="btn-icon">🎓</div>
+          <div class="btn-label">Помощь с заданием</div>
+          <div class="btn-desc">Объясню и помогу</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Быстрый запрос</div>
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <input id="quick-input" type="text" placeholder="Напиши боту что нужно..." style="flex:1; background:#252525; border:0.5px solid #333; border-radius:6px; padding:10px 12px; color:#fff; font-size:13px; outline:none;">
+        <button onclick="sendQuick()" style="background:#217346; color:#fff; border:none; border-radius:6px; padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer;">Отправить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Работа с файлами -->
+  <div class="page" id="page-files">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-title">Работа с файлами</div>
+      <div class="grid3">
+        <div class="btn-card" onclick="send('📎 Объединить PDF')">
+          <div class="btn-icon">📎</div>
+          <div class="btn-label">Объединить PDF</div>
+          <div class="btn-desc">Несколько файлов</div>
+        </div>
+        <div class="btn-card" onclick="send('📄 PDF → Word')">
+          <div class="btn-icon">📄</div>
+          <div class="btn-label">PDF → Word</div>
+          <div class="btn-desc">Конвертация</div>
+        </div>
+        <div class="btn-card" onclick="send('📝 Word → PDF')">
+          <div class="btn-icon">📝</div>
+          <div class="btn-label">Word → PDF</div>
+          <div class="btn-desc">Конвертация</div>
+        </div>
+        <div class="btn-card" onclick="send('✂️ Разделить PDF')">
+          <div class="btn-icon">✂️</div>
+          <div class="btn-label">Разделить PDF</div>
+          <div class="btn-desc">По страницам</div>
+        </div>
+        <div class="btn-card" onclick="send('🗜️ Сжать PDF')">
+          <div class="btn-icon">🗜️</div>
+          <div class="btn-label">Сжать PDF</div>
+          <div class="btn-desc">Уменьшить размер</div>
+        </div>
+        <div class="btn-card" onclick="send('✍️ Подписать документ')">
+          <div class="btn-icon">✍️</div>
+          <div class="btn-label">Подписать</div>
+          <div class="btn-desc">Факсимиле</div>
+        </div>
+        <div class="btn-card" onclick="send('📋 Редактировать файл')">
+          <div class="btn-icon">📋</div>
+          <div class="btn-label">Редактировать</div>
+          <div class="btn-desc">Word файл</div>
+        </div>
+        <div class="btn-card" onclick="send('📖 Анализ файла')">
+          <div class="btn-icon">📖</div>
+          <div class="btn-label">Анализ файла</div>
+          <div class="btn-desc">Вопросы по PDF</div>
+        </div>
+        <div class="btn-card" onclick="send('📷 Распознать скан')">
+          <div class="btn-icon">📷</div>
+          <div class="btn-label">Распознать скан</div>
+          <div class="btn-desc">Фото в текст</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Напоминания -->
+  <div class="page" id="page-reminders">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-title">Напоминания</div>
+      <div class="btn-card" style="flex-direction:row; align-items:center; gap:10px; margin-bottom:14px;" onclick="send('⏰ Напоминание')">
+        <div class="btn-icon">➕</div>
+        <div>
+          <div class="btn-label">Создать напоминание</div>
+          <div class="btn-desc">Настроить время и повтор</div>
+        </div>
+      </div>
+      <div style="color:#9e9e9e; font-size:13px; text-align:center; padding:20px;">Напоминания управляются через бота</div>
+    </div>
+  </div>
+
+  <!-- Подписка -->
+  <div class="page" id="page-sub">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-title">Тарифы</div>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+        <div class="plan-card" style="cursor:pointer" onclick="send('buy_base')">
+          <div class="plan-icon" style="background:#555;">💼</div>
+          <div>
+            <div class="plan-name">Базовый</div>
+            <div class="plan-info">550р/мес · 50 запросов · 20 документов</div>
+          </div>
+        </div>
+        <div class="plan-card" style="cursor:pointer; border-color:#21a366;" onclick="send('buy_standard')">
+          <div class="plan-icon">⭐</div>
+          <div>
+            <div class="plan-name">Стандарт</div>
+            <div class="plan-info">990р/мес · 100 запросов · 50 документов</div>
+          </div>
+          <div style="margin-left:auto; background:#21a366; color:#fff; font-size:10px; font-weight:600; border-radius:4px; padding:2px 8px;">Хит</div>
+        </div>
+        <div class="plan-card" style="cursor:pointer;" onclick="send('buy_pro')">
+          <div class="plan-icon">🚀</div>
+          <div>
+            <div class="plan-name">Про</div>
+            <div class="plan-info">1990р/мес · 300 запросов · 100 документов</div>
+          </div>
+        </div>
+        <div class="plan-card" style="cursor:pointer;" onclick="send('buy_max')">
+          <div class="plan-icon">👑</div>
+          <div>
+            <div class="plan-name">Максимум</div>
+            <div class="plan-info">4500р/мес · Безлимит запросов</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-home" onclick="showPage('home')">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-lbl">Главная</div>
+  </div>
+  <div class="nav-item" id="nav-files" onclick="showPage('files')">
+    <div class="nav-icon">📁</div>
+    <div class="nav-lbl">Файлы</div>
+  </div>
+  <div class="nav-item" id="nav-reminders" onclick="showPage('reminders')">
+    <div class="nav-icon">⏰</div>
+    <div class="nav-lbl">Напоминания</div>
+  </div>
+  <div class="nav-item" id="nav-sub" onclick="showPage('sub')">
+    <div class="nav-icon">💎</div>
+    <div class="nav-lbl">Подписка</div>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+tg.setHeaderColor('#217346');
+tg.setBackgroundColor('#1e1e1e');
+
+function send(text) {
+  tg.sendData(text);
+  tg.close();
+}
+
+function sendQuick() {
+  const val = document.getElementById('quick-input').value.trim();
+  if (val) { send(val); }
+}
+
+document.getElementById('quick-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') sendQuick();
+});
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+}
+
+const initData = tg.initDataUnsafe;
+if (initData && initData.user) {
+  document.getElementById('plan-badge').textContent = 'Привет, ' + initData.user.first_name;
+}
+</script>
+</body>
+</html>
