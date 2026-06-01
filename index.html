@@ -7,7 +7,16 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-body { background: #1e1e1e; color: #fff; max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+#splash { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #071e20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; z-index: 999; animation: fadeIn 0.6s ease forwards; max-width: 480px; margin: 0 auto; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+#splash.hide { animation: fadeOut 0.5s ease forwards; }
+@keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.05); } }
+#gearWrap { width: 180px; height: 180px; filter: drop-shadow(0 0 28px rgba(0,201,167,0.4)); }
+.bot-name { font-size: 22px; font-weight: 600; letter-spacing: 3px; background: linear-gradient(135deg, #00c9a7, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-transform: uppercase; }
+.loader { width: 120px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.loader-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00c9a7, #4facfe); border-radius: 2px; transition: width 0.1s linear; }
+#main-app { display: none; flex-direction: column; min-height: 100vh; background: #1e1e1e; }
 .header { background: #217346; padding: 14px 16px 12px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
 .logo { width: 36px; height: 36px; background: #185c37; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; border: 1px solid #21a366; }
 .header-title { font-size: 16px; font-weight: 600; color: #fff; }
@@ -42,6 +51,16 @@ body { background: #1e1e1e; color: #fff; max-width: 480px; margin: 0 auto; min-h
 </style>
 </head>
 <body>
+
+<div id="splash">
+  <div id="gearWrap">
+    <canvas id="gear" width="180" height="180"></canvas>
+  </div>
+  <div class="bot-name">DocsHelper</div>
+  <div class="loader"><div class="loader-bar" id="bar"></div></div>
+</div>
+
+<div id="main-app">
 
 <div class="header">
   <div class="logo">📋</div>
@@ -295,7 +314,87 @@ body { background: #1e1e1e; color: #fff; max-width: 480px; margin: 0 auto; min-h
   </div>
 </div>
 
+</div>
+
 <script>
+const W = 180, cx = W/2, cy = W/2;
+const gearCanvas = document.getElementById('gear');
+const gearCtx = gearCanvas.getContext('2d');
+
+function drawGearFrame(rotation) {
+  gearCtx.clearRect(0,0,W,W);
+  gearCtx.save();
+  gearCtx.translate(cx, cy);
+  gearCtx.rotate(rotation);
+  gearCtx.translate(-cx, -cy);
+  const radius = 80;
+  const bg = gearCtx.createLinearGradient(0,0,W,W);
+  bg.addColorStop(0,'#00c9a7');
+  bg.addColorStop(1,'#4facfe');
+  gearCtx.beginPath();
+  gearCtx.roundRect(cx-radius, cy-radius, radius*2, radius*2, 16);
+  gearCtx.fillStyle = bg;
+  gearCtx.fill();
+  const scale = radius / 150;
+  const teeth=12, R1=112*scale, R2=85*scale, hR=32*scale, n=teeth*2;
+  const pts = [];
+  for(let i=0;i<n;i++){
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const ro=i%2===0?R1:R2, rn=i%2===0?R2:R1;
+    for(let k=0;k<4;k++){
+      const t=k/4, ac=a+t*(Math.PI*2/n);
+      const rs=i%2===0?ro-(ro-rn)*(3*t*t-2*t*t*t):ro+(rn-ro)*(3*t*t-2*t*t*t);
+      pts.push([cx+rs*Math.cos(ac), cy+rs*Math.sin(ac)]);
+    }
+  }
+  gearCtx.beginPath();
+  gearCtx.moveTo(pts[0][0],pts[0][1]);
+  for(let i=1;i<pts.length;i++) gearCtx.lineTo(pts[i][0],pts[i][1]);
+  gearCtx.closePath();
+  gearCtx.fillStyle='white';
+  gearCtx.fill();
+  const hg=gearCtx.createLinearGradient(0,0,W,W);
+  hg.addColorStop(0,'#00c9a7');
+  hg.addColorStop(1,'#4facfe');
+  gearCtx.beginPath();
+  gearCtx.arc(cx,cy,hR,0,Math.PI*2);
+  gearCtx.fillStyle=hg;
+  gearCtx.fill();
+  gearCtx.restore();
+}
+
+let angle = 0;
+function animateGear() {
+  angle += 0.008;
+  drawGearFrame(angle);
+  requestAnimationFrame(animateGear);
+}
+animateGear();
+
+let progress = 0;
+const bar = document.getElementById('bar');
+const interval = setInterval(() => {
+  progress += Math.random() * 12;
+  if(progress >= 100) {
+    progress = 100;
+    bar.style.width = '100%';
+    clearInterval(interval);
+    setTimeout(hideSplash, 300);
+  } else {
+    bar.style.width = progress + '%';
+  }
+}, 120);
+
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  splash.classList.add('hide');
+  setTimeout(() => {
+    splash.style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
+    document.getElementById('main-app').style.flexDirection = 'column';
+  }, 500);
+}
+
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.setHeaderColor('#217346');
