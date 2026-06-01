@@ -227,6 +227,49 @@ body { background: #1e1e1e; color: #fff; max-width: 480px; margin: 0 auto; min-h
     </div>
   </div>
 
+  <div class="page" id="page-audit">
+    <div class="section" style="padding-top:16px;">
+      <div id="audit-start">
+        <div style="text-align:center; padding:20px 0;">
+          <div style="font-size:48px; margin-bottom:12px;">🧠</div>
+          <div style="font-size:17px; font-weight:600; margin-bottom:8px;">Аудит ресурсов</div>
+          <div style="font-size:13px; color:#9e9e9e; margin-bottom:24px; line-height:1.5;">Оцени 4 ключевых области своей жизни по 10-балльной шкале и получи трезвый анализ</div>
+          <button onclick="startAudit()" style="background:#217346; color:#fff; border:none; border-radius:8px; padding:14px 32px; font-size:15px; font-weight:600; cursor:pointer; width:100%;">Начать аудит</button>
+        </div>
+      </div>
+      <div id="audit-question" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div style="font-size:11px; color:#21a366; font-weight:600; text-transform:uppercase;">Вопрос</div>
+          <div id="audit-progress" style="font-size:11px; color:#9e9e9e;"></div>
+        </div>
+        <div style="background:#252525; border:1px solid #217346; border-radius:10px; padding:20px; margin-bottom:20px; text-align:center;">
+          <div id="audit-q-label" style="font-size:20px; font-weight:700; margin-bottom:8px;"></div>
+          <div id="audit-q-desc" style="font-size:13px; color:#9e9e9e; line-height:1.5;"></div>
+        </div>
+        <div style="text-align:center; margin-bottom:12px;">
+          <div id="audit-score-val" style="font-size:48px; font-weight:700; color:#21a366;">5</div>
+          <div style="font-size:12px; color:#9e9e9e;">из 10</div>
+        </div>
+        <input id="audit-slider" type="range" min="1" max="10" value="5"
+          oninput="document.getElementById('audit-score-val').textContent = this.value"
+          style="width:100%; accent-color:#21a366; margin-bottom:20px; height:6px;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:#9e9e9e; margin-bottom:20px;">
+          <span>1 — очень плохо</span><span>10 — отлично</span>
+        </div>
+        <button onclick="submitAuditStep()" style="background:#217346; color:#fff; border:none; border-radius:8px; padding:14px; font-size:15px; font-weight:600; cursor:pointer; width:100%;">Далее →</button>
+      </div>
+      <div id="audit-result" style="display:none;">
+        <div style="text-align:center; margin-bottom:16px;">
+          <canvas id="audit-canvas" width="220" height="220"></canvas>
+          <div style="font-size:13px; color:#9e9e9e; margin-top:4px;">Средний балл</div>
+          <div id="audit-avg" style="font-size:28px; font-weight:700; color:#21a366;"></div>
+        </div>
+        <div id="audit-details"></div>
+        <button onclick="startAudit()" style="background:#252525; color:#21a366; border:1px solid #217346; border-radius:8px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; width:100%; margin-top:8px; margin-bottom:14px;">Пройти снова</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="bottom-nav">
@@ -245,6 +288,10 @@ body { background: #1e1e1e; color: #fff; max-width: 480px; margin: 0 auto; min-h
   <div class="nav-item" id="nav-sub" onclick="showPage('sub')">
     <div class="nav-icon">💎</div>
     <div class="nav-lbl">Подписка</div>
+  </div>
+  <div class="nav-item" id="nav-audit" onclick="showPage('audit')">
+    <div class="nav-icon">🧠</div>
+    <div class="nav-lbl">Аудит</div>
   </div>
 </div>
 
@@ -311,6 +358,153 @@ if (initData && initData.user) {
       document.getElementById('plan-name').textContent = 'Пробный';
       document.getElementById('plan-info').textContent = 'Пробный период';
     });
+}
+
+// Audit logic
+let auditScores = {};
+const auditCriteria = [
+  { key: 'env', label: '👥 Окружение', desc: 'Качество отношений и поддержка людей вокруг' },
+  { key: 'res', label: '💰 Ресурсы', desc: 'Финансы, время и энергия' },
+  { key: 'skills', label: '🧠 Навыки', desc: 'Профессиональные и личные компетенции' },
+  { key: 'health', label: '❤️ Здоровье', desc: 'Физическое и эмоциональное состояние' },
+];
+let auditStep = 0;
+
+function startAudit() {
+  auditScores = {};
+  auditStep = 0;
+  showAuditStep();
+  document.getElementById('audit-start').style.display = 'none';
+  document.getElementById('audit-question').style.display = 'block';
+  document.getElementById('audit-result').style.display = 'none';
+}
+
+function showAuditStep() {
+  const c = auditCriteria[auditStep];
+  document.getElementById('audit-q-label').textContent = c.label;
+  document.getElementById('audit-q-desc').textContent = c.desc;
+  document.getElementById('audit-progress').textContent = `${auditStep + 1} / ${auditCriteria.length}`;
+  document.getElementById('audit-score-val').textContent = '5';
+  document.getElementById('audit-slider').value = 5;
+}
+
+function submitAuditStep() {
+  const score = parseInt(document.getElementById('audit-slider').value);
+  auditScores[auditCriteria[auditStep].key] = score;
+  auditStep++;
+  if (auditStep < auditCriteria.length) {
+    showAuditStep();
+  } else {
+    showAuditResult();
+  }
+}
+
+function getComment(key, score) {
+  const comments = {
+    env: score >= 8 ? 'Твоё окружение — твоя сила. Береги этих людей.' : score >= 5 ? 'Есть кому довериться, но стоит расширить круг поддержки.' : 'Окружение требует внимания. Ищи людей которые тебя вдохновляют.',
+    res: score >= 8 ? 'Ресурсы под контролем — это даёт свободу действий.' : score >= 5 ? 'Ресурсов хватает, но есть куда расти.' : 'Ресурсы ограничены. Сфокусируйся на главном и убери лишнее.',
+    skills: score >= 8 ? 'Навыки на высоком уровне — продолжай развиваться.' : score >= 5 ? 'Хорошая база. Выбери 1-2 навыка для углублённого развития.' : 'Есть потенциал для роста. Начни с малого — один навык в месяц.',
+    health: score >= 8 ? 'Отличное состояние — это фундамент всего остального.' : score >= 5 ? 'Норм, но стоит добавить больше заботы о себе.' : 'Здоровье требует первоочерёдного внимания. Всё остальное подождёт.',
+  };
+  return comments[key];
+}
+
+function getWish(key, score) {
+  const wishes = {
+    env: score >= 8 ? 'Поблагодари важных людей в своей жизни.' : score >= 5 ? 'Найди 1 человека которому можешь больше доверять.' : 'Запишись на любое групповое занятие — найди своих людей.',
+    res: score >= 8 ? 'Подумай как масштабировать то что работает.' : score >= 5 ? 'Составь простой бюджет на следующий месяц.' : 'Выпиши все расходы за неделю — это первый шаг к контролю.',
+    skills: score >= 8 ? 'Поделись знаниями с кем-то — это закрепит твои навыки.' : score >= 5 ? 'Выдели 30 минут в день на обучение.' : 'Пройди один бесплатный курс по теме которая тебя интересует.',
+    health: score >= 8 ? 'Сохраняй ритм — режим сна и активность решают всё.' : score >= 5 ? 'Добавь 20 минут прогулки каждый день.' : 'Начни с самого простого — стакан воды утром и 10 минут на воздухе.',
+  };
+  return wishes[key];
+}
+
+function showAuditResult() {
+  document.getElementById('audit-question').style.display = 'none';
+  document.getElementById('audit-result').style.display = 'block';
+
+  const scores = auditCriteria.map(c => auditScores[c.key]);
+  const avg = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1);
+
+  // Draw radar chart
+  const canvas = document.getElementById('audit-canvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 110, cy = 110, r = 85;
+  ctx.clearRect(0, 0, 220, 220);
+
+  const angles = auditCriteria.map((_, i) => (i * Math.PI * 2 / auditCriteria.length) - Math.PI / 2);
+
+  // Grid
+  for (let g = 2; g <= 10; g += 2) {
+    ctx.beginPath();
+    angles.forEach((a, i) => {
+      const x = cx + Math.cos(a) * r * g / 10;
+      const y = cy + Math.sin(a) * r * g / 10;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Axes
+  angles.forEach(a => {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  });
+
+  // Data
+  ctx.beginPath();
+  angles.forEach((a, i) => {
+    const score = auditScores[auditCriteria[i].key];
+    const x = cx + Math.cos(a) * r * score / 10;
+    const y = cy + Math.sin(a) * r * score / 10;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(33,115,70,0.3)';
+  ctx.fill();
+  ctx.strokeStyle = '#21a366';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#fff';
+  ctx.font = '11px Segoe UI';
+  ctx.textAlign = 'center';
+  const labels = ['👥', '💰', '🧠', '❤️'];
+  angles.forEach((a, i) => {
+    const x = cx + Math.cos(a) * (r + 14);
+    const y = cy + Math.sin(a) * (r + 14) + 4;
+    ctx.fillText(labels[i], x, y);
+  });
+
+  // Summary
+  document.getElementById('audit-avg').textContent = avg + ' / 10';
+
+  let html = '';
+  auditCriteria.forEach(c => {
+    const score = auditScores[c.key];
+    const color = score >= 8 ? '#21a366' : score >= 5 ? '#f39c12' : '#e74c3c';
+    html += `
+      <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:12px; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="font-size:13px; font-weight:600;">${c.label}</div>
+          <div style="font-size:18px; font-weight:700; color:${color};">${score}/10</div>
+        </div>
+        <div style="background:#333; border-radius:4px; height:4px; margin-bottom:8px;">
+          <div style="background:${color}; width:${score*10}%; height:4px; border-radius:4px;"></div>
+        </div>
+        <div style="font-size:12px; color:#ccc; margin-bottom:4px;">${getComment(c.key, score)}</div>
+        <div style="font-size:11px; color:#21a366;">→ ${getWish(c.key, score)}</div>
+      </div>`;
+  });
+  document.getElementById('audit-details').innerHTML = html;
 }
 </script>
 </body>
