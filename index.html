@@ -2,17 +2,17 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>DocsHelper</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
 
-#splash { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #071e20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; z-index: 999; animation: fadeIn 0.6s ease forwards; max-width: 480px; margin: 0 auto; }
+#splash { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #071e20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; z-index: 999; animation: fadeIn 0.6s ease forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
 #splash.hide { animation: fadeOut 0.5s ease forwards; }
-@keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.05); } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 #gearWrap { width: 180px; height: 180px; filter: drop-shadow(0 0 28px rgba(0,201,167,0.4)); }
 .bot-name { font-size: 22px; font-weight: 600; letter-spacing: 3px; background: linear-gradient(135deg, #00c9a7, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-transform: uppercase; }
 .loader { width: 120px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
@@ -20,17 +20,14 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
 
 #main-app { display: none; flex-direction: column; height: 100vh; background: #1e1e1e; overflow: hidden; }
 
-.header { background: #217346; padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; z-index: 10; }
+.header { background: #217346; padding: 12px 16px 10px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .logo { width: 34px; height: 34px; background: #185c37; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; border: 1px solid #21a366; }
 .header-title { font-size: 16px; font-weight: 600; color: #fff; }
 .header-sub { font-size: 11px; color: #c9e8d4; margin-top: 1px; }
 .badge { background: #185c37; color: #21a366; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 3px 10px; margin-left: auto; border: 0.5px solid #21a366; white-space: nowrap; }
 
-/* Прокручиваемая область между шапкой и навбаром */
 .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
-/* Отступ снизу чтобы навбар не перекрывал последний элемент */
-.scroll-pad { height: calc(68px + env(safe-area-inset-bottom, 0px)); }
+.scroll-pad { height: 72px; }
 
 .section { padding: 14px 14px 0; }
 .section-title { font-size: 10px; font-weight: 700; color: #21a366; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
@@ -55,45 +52,46 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
 .btn-label { font-size: 12px; font-weight: 600; color: #fff; line-height: 1.3; }
 .btn-desc { font-size: 10px; color: #9e9e9e; }
 
-.quick-row { display: flex; gap: 8px; margin-bottom: 14px; }
-.quick-row input { flex: 1; background: #252525; border: 0.5px solid #333; border-radius: 6px; padding: 10px 12px; color: #fff; font-size: 13px; outline: none; }
-.quick-row input:focus { border-color: #217346; }
-.quick-row button { background: #217346; color: #fff; border: none; border-radius: 6px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
-
-/* Нижний навбар — фиксированный, с поддержкой safe-area на iPhone */
-.bottom-nav {
-  background: #1a1a1a;
-  border-top: 0.5px solid #333;
-  display: flex;
-  flex-shrink: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  z-index: 10;
-}
+.bottom-nav { background: #1a1a1a; border-top: 0.5px solid #333; display: flex; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 10; }
 .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px 8px; gap: 3px; cursor: pointer; }
 .nav-icon { font-size: 20px; }
 .nav-lbl { font-size: 10px; color: #9e9e9e; }
 .nav-item.active .nav-lbl { color: #21a366; }
-.nav-item.active .nav-icon { filter: drop-shadow(0 0 4px rgba(33,163,102,0.5)); }
 
 .page { display: none; }
 .page.active { display: block; }
 
-/* History items */
 .hist-item { background: #252525; border: 0.5px solid #333; border-radius: 6px; padding: 10px 12px; margin-bottom: 7px; display: flex; align-items: center; gap: 10px; }
+
+/* Chat styles */
+.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 120px); }
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 85%; padding: 10px 13px; border-radius: 12px; font-size: 13px; line-height: 1.5; word-break: break-word; }
+.msg-user { background: #217346; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg-bot { background: #252525; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 4px; border: 0.5px solid #333; }
+.msg-typing { background: #252525; color: #9e9e9e; align-self: flex-start; border-radius: 12px; border-bottom-left-radius: 4px; border: 0.5px solid #333; padding: 10px 13px; font-size: 13px; }
+.chat-input-row { padding: 10px 14px; background: #1a1a1a; border-top: 0.5px solid #333; display: flex; gap: 8px; }
+.chat-input-row textarea { flex: 1; background: #252525; border: 0.5px solid #333; border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 13px; outline: none; resize: none; font-family: inherit; max-height: 100px; }
+.chat-input-row textarea:focus { border-color: #217346; }
+.chat-send-btn { background: #217346; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-size: 18px; cursor: pointer; flex-shrink: 0; align-self: flex-end; }
+.chat-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 10px; }
+.chip { background: #252525; border: 0.5px solid #333; border-radius: 20px; padding: 6px 12px; font-size: 12px; color: #ccc; cursor: pointer; white-space: nowrap; }
+.chip:active { background: #2d3d34; border-color: #217346; color: #fff; }
+
+/* Bot redirect button */
+.bot-link-btn { display: flex; align-items: center; gap: 8px; background: #252525; border: 0.5px solid #217346; border-radius: 8px; padding: 12px 14px; margin: 10px 14px; cursor: pointer; color: #21a366; font-size: 13px; font-weight: 600; }
+.bot-link-btn:active { background: #2d3d34; }
 </style>
 </head>
 <body>
 
 <div id="splash">
-  <div id="gearWrap">
-    <canvas id="gear" width="180" height="180"></canvas>
-  </div>
+  <div id="gearWrap"><canvas id="gear" width="180" height="180"></canvas></div>
   <div class="bot-name">DocsHelper</div>
   <div class="loader"><div class="loader-bar" id="bar"></div></div>
 </div>
 
 <div id="main-app">
-
   <div class="header">
     <div class="logo">📋</div>
     <div>
@@ -105,6 +103,7 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
 
   <div class="content">
 
+    <!-- Главная -->
     <div class="page active" id="page-home">
       <div class="section" style="padding-top:14px;">
         <div class="section-title">Моя подписка</div>
@@ -114,174 +113,110 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
             <div class="plan-name" id="plan-name">Загрузка...</div>
             <div class="plan-info" id="plan-info">Загрузка...</div>
           </div>
-          <button class="plan-btn" onclick="send('💎 Моя подписка')">Подробнее</button>
+          <button class="plan-btn" onclick="showPage('sub')">Подробнее</button>
         </div>
       </div>
-
       <div class="section">
         <div class="section-title">Статистика сегодня</div>
         <div class="stats">
-          <div class="stat">
-            <div class="stat-val" id="stat-req">—</div>
-            <div class="stat-lbl">Запросов сегодня</div>
-          </div>
-          <div class="stat">
-            <div class="stat-val" id="stat-doc">—</div>
-            <div class="stat-lbl">Документов сегодня</div>
-          </div>
+          <div class="stat"><div class="stat-val" id="stat-req">—</div><div class="stat-lbl">Запросов</div></div>
+          <div class="stat"><div class="stat-val" id="stat-doc">—</div><div class="stat-lbl">Документов</div></div>
         </div>
       </div>
-
       <div class="section">
-        <div class="section-title">Создать документ</div>
+        <div class="section-title">Действия</div>
         <div class="grid2">
-          <div class="btn-card" onclick="send('📄 Создать документ')">
-            <div class="btn-icon">📄</div>
-            <div class="btn-label">Создать документ</div>
-            <div class="btn-desc">Word по ГОСТу</div>
-          </div>
-          <div class="btn-card" onclick="send('⚡ Срочный документ')">
-            <div class="btn-icon">⚡</div>
-            <div class="btn-label">Срочный документ</div>
-            <div class="btn-desc">Быстро и готово</div>
-          </div>
-          <div class="btn-card" onclick="send('✍️ Повысить оригинальность')">
-            <div class="btn-icon">✍️</div>
-            <div class="btn-label">Оригинальность</div>
-            <div class="btn-desc">Переписать текст</div>
-          </div>
-          <div class="btn-card" onclick="send('🎓 Помощь с заданием')">
-            <div class="btn-icon">🎓</div>
-            <div class="btn-label">Помощь с заданием</div>
-            <div class="btn-desc">Объясню и помогу</div>
-          </div>
+          <div class="btn-card" onclick="openChat('doc')"><div class="btn-icon">📄</div><div class="btn-label">Создать документ</div><div class="btn-desc">Word по ГОСТу</div></div>
+          <div class="btn-card" onclick="openChat('urgent')"><div class="btn-icon">⚡</div><div class="btn-label">Срочный документ</div><div class="btn-desc">Быстро и готово</div></div>
+          <div class="btn-card" onclick="openChat('original')"><div class="btn-icon">✍️</div><div class="btn-label">Оригинальность</div><div class="btn-desc">Переписать текст</div></div>
+          <div class="btn-card" onclick="openChat('help')"><div class="btn-icon">🎓</div><div class="btn-label">Помощь с заданием</div><div class="btn-desc">Объясню и помогу</div></div>
+          <div class="btn-card" onclick="openChat('consult')"><div class="btn-icon">💬</div><div class="btn-label">Консультация</div><div class="btn-desc">Задай вопрос</div></div>
+          <div class="btn-card" onclick="openChat('free')"><div class="btn-icon">🤖</div><div class="btn-label">Свободный чат</div><div class="btn-desc">Любой запрос</div></div>
         </div>
       </div>
-
-      <div class="section">
-        <div class="section-title">Быстрый запрос</div>
-        <div class="quick-row">
-          <input id="quick-input" type="text" placeholder="Напиши боту что нужно...">
-          <button onclick="sendQuick()">→</button>
-        </div>
-      </div>
-
       <div class="scroll-pad"></div>
     </div>
 
+    <!-- Файлы -->
     <div class="page" id="page-files">
       <div class="section" style="padding-top:14px;">
         <div class="section-title">История документов</div>
-        <div id="doc-history" style="margin-bottom:12px;">
-          <div style="color:#9e9e9e; font-size:13px; text-align:center; padding:16px;">Загрузка...</div>
-        </div>
+        <div id="doc-history" style="margin-bottom:12px;"><div style="color:#9e9e9e; font-size:13px; text-align:center; padding:16px;">Загрузка...</div></div>
       </div>
       <div class="section">
-        <div class="section-title">Работа с файлами</div>
+        <div class="section-title">Работа с файлами — через бота</div>
+        <div style="color:#9e9e9e; font-size:12px; margin-bottom:10px;">Отправь файл боту и выбери действие</div>
         <div class="grid3">
-          <div class="btn-card" onclick="send('📎 Объединить PDF')">
-            <div class="btn-icon">📎</div>
-            <div class="btn-label">Объединить PDF</div>
-            <div class="btn-desc">Несколько файлов</div>
-          </div>
-          <div class="btn-card" onclick="send('📄 PDF → Word')">
-            <div class="btn-icon">📄</div>
-            <div class="btn-label">PDF → Word</div>
-            <div class="btn-desc">Конвертация</div>
-          </div>
-          <div class="btn-card" onclick="send('📝 Word → PDF')">
-            <div class="btn-icon">📝</div>
-            <div class="btn-label">Word → PDF</div>
-            <div class="btn-desc">Конвертация</div>
-          </div>
-          <div class="btn-card" onclick="send('✂️ Разделить PDF')">
-            <div class="btn-icon">✂️</div>
-            <div class="btn-label">Разделить PDF</div>
-            <div class="btn-desc">По страницам</div>
-          </div>
-          <div class="btn-card" onclick="send('🗜️ Сжать PDF')">
-            <div class="btn-icon">🗜️</div>
-            <div class="btn-label">Сжать PDF</div>
-            <div class="btn-desc">Уменьшить размер</div>
-          </div>
-          <div class="btn-card" onclick="send('✍️ Подписать документ')">
-            <div class="btn-icon">✍️</div>
-            <div class="btn-label">Подписать</div>
-            <div class="btn-desc">Факсимиле</div>
-          </div>
-          <div class="btn-card" onclick="send('📋 Редактировать файл')">
-            <div class="btn-icon">📋</div>
-            <div class="btn-label">Редактировать</div>
-            <div class="btn-desc">Word файл</div>
-          </div>
-          <div class="btn-card" onclick="send('📖 Анализ файла')">
-            <div class="btn-icon">📖</div>
-            <div class="btn-label">Анализ файла</div>
-            <div class="btn-desc">Вопросы по PDF</div>
-          </div>
-          <div class="btn-card" onclick="send('📷 Распознать скан')">
-            <div class="btn-icon">📷</div>
-            <div class="btn-label">Распознать скан</div>
-            <div class="btn-desc">Фото в текст</div>
-          </div>
+          <div class="btn-card" onclick="openBot('📎 Объединить PDF')"><div class="btn-icon">📎</div><div class="btn-label">Объединить PDF</div><div class="btn-desc">Несколько файлов</div></div>
+          <div class="btn-card" onclick="openBot('✂️ Разделить PDF')"><div class="btn-icon">✂️</div><div class="btn-label">Разделить PDF</div><div class="btn-desc">По страницам</div></div>
+          <div class="btn-card" onclick="openBot('🗜️ Сжать PDF')"><div class="btn-icon">🗜️</div><div class="btn-label">Сжать PDF</div><div class="btn-desc">Уменьшить размер</div></div>
+          <div class="btn-card" onclick="openBot('✍️ Подписать документ')"><div class="btn-icon">✍️</div><div class="btn-label">Подписать</div><div class="btn-desc">Факсимиле</div></div>
+          <div class="btn-card" onclick="openBot('📋 Редактировать файл')"><div class="btn-icon">📋</div><div class="btn-label">Редактировать</div><div class="btn-desc">Word файл</div></div>
+          <div class="btn-card" onclick="openBot('📖 Анализ файла')"><div class="btn-icon">📖</div><div class="btn-label">Анализ файла</div><div class="btn-desc">Вопросы по PDF</div></div>
+          <div class="btn-card" onclick="openBot('📷 Распознать скан')"><div class="btn-icon">📷</div><div class="btn-label">Распознать скан</div><div class="btn-desc">Фото в текст</div></div>
         </div>
       </div>
       <div class="scroll-pad"></div>
     </div>
 
+    <!-- Чат -->
+    <div class="page" id="page-chat">
+      <div class="chat-wrap">
+        <div class="chat-chips" id="chat-chips"></div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <textarea id="chat-input" placeholder="Напиши сообщение..." rows="1" oninput="autoResize(this)"></textarea>
+          <button class="chat-send-btn" onclick="chatSend()">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Напоминания -->
     <div class="page" id="page-reminders">
       <div class="section" style="padding-top:14px;">
         <div class="section-title">Напоминания</div>
-        <div class="btn-card" style="flex-direction:row; align-items:center; gap:10px; margin-bottom:12px;" onclick="send('⏰ Напоминание')">
-          <div class="btn-icon">➕</div>
-          <div>
-            <div class="btn-label">Создать напоминание</div>
-            <div class="btn-desc">Настроить время и повтор</div>
-          </div>
+        <div class="bot-link-btn" onclick="openBot('⏰ Напоминание')">
+          <span>➕</span> Создать напоминание через бота
         </div>
-        <div style="color:#9e9e9e; font-size:13px; text-align:center; padding:20px;">Напоминания управляются через бота</div>
+        <div style="color:#9e9e9e; font-size:13px; text-align:center; padding:20px; line-height:1.6;">Напоминания настраиваются через бота.<br>Нажми кнопку выше чтобы создать.</div>
       </div>
       <div class="scroll-pad"></div>
     </div>
 
+    <!-- Подписка -->
     <div class="page" id="page-sub">
       <div class="section" style="padding-top:14px;">
         <div class="section-title">Тарифы</div>
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
-          <div class="plan-card" style="cursor:pointer;" onclick="send('buy_base')">
+          <div class="plan-card" style="cursor:pointer;" onclick="openBot('buy_base')">
             <div class="plan-icon" style="background:#555;">💼</div>
-            <div>
-              <div class="plan-name">Базовый</div>
-              <div class="plan-info">550р/мес · 50 запросов · 20 документов</div>
-            </div>
+            <div><div class="plan-name">Базовый</div><div class="plan-info">550р/мес · 50 запросов · 20 документов</div></div>
+            <button class="plan-btn">Купить</button>
           </div>
-          <div class="plan-card" style="cursor:pointer; border-color:#21a366;" onclick="send('buy_standard')">
+          <div class="plan-card" style="cursor:pointer; border-color:#21a366;" onclick="openBot('buy_standard')">
             <div class="plan-icon">⭐</div>
-            <div>
-              <div class="plan-name">Стандарт</div>
-              <div class="plan-info">990р/мес · 100 запросов · 50 документов</div>
+            <div><div class="plan-name">Стандарт</div><div class="plan-info">990р/мес · 100 запросов · 50 документов</div></div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-left:auto;">
+              <div style="background:#21a366; color:#fff; font-size:10px; font-weight:600; border-radius:4px; padding:2px 8px;">Хит</div>
+              <button class="plan-btn">Купить</button>
             </div>
-            <div style="margin-left:auto; background:#21a366; color:#fff; font-size:10px; font-weight:600; border-radius:4px; padding:2px 8px;">Хит</div>
           </div>
-          <div class="plan-card" style="cursor:pointer;" onclick="send('buy_pro')">
+          <div class="plan-card" style="cursor:pointer;" onclick="openBot('buy_pro')">
             <div class="plan-icon">🚀</div>
-            <div>
-              <div class="plan-name">Про</div>
-              <div class="plan-info">1990р/мес · 300 запросов · 100 документов</div>
-            </div>
+            <div><div class="plan-name">Про</div><div class="plan-info">1990р/мес · 300 запросов · 100 документов</div></div>
+            <button class="plan-btn">Купить</button>
           </div>
-          <div class="plan-card" style="cursor:pointer;" onclick="send('buy_max')">
+          <div class="plan-card" style="cursor:pointer;" onclick="openBot('buy_max')">
             <div class="plan-icon">👑</div>
-            <div>
-              <div class="plan-name">Максимум</div>
-              <div class="plan-info">4500р/мес · Безлимит запросов</div>
-            </div>
+            <div><div class="plan-name">Максимум</div><div class="plan-info">4500р/мес · Безлимит запросов</div></div>
+            <button class="plan-btn">Купить</button>
           </div>
         </div>
       </div>
       <div class="scroll-pad"></div>
     </div>
 
+    <!-- Аудит -->
     <div class="page" id="page-audit">
       <div class="section" style="padding-top:14px; padding-bottom:0;">
         <div id="audit-start">
@@ -290,27 +225,14 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
             <div style="font-size:20px; font-weight:600; margin-bottom:8px;">Аудит ресурсов</div>
             <div style="font-size:13px; color:#9e9e9e; margin-bottom:22px; line-height:1.6;">Оцени 4 ключевых области своей жизни по 10-балльной шкале и получи трезвый анализ</div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:22px;">
-              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;">
-                <div style="font-size:24px; margin-bottom:5px;">👥</div>
-                <div style="font-size:12px; color:#9e9e9e;">Окружение</div>
-              </div>
-              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;">
-                <div style="font-size:24px; margin-bottom:5px;">💰</div>
-                <div style="font-size:12px; color:#9e9e9e;">Ресурсы</div>
-              </div>
-              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;">
-                <div style="font-size:24px; margin-bottom:5px;">🧠</div>
-                <div style="font-size:12px; color:#9e9e9e;">Навыки</div>
-              </div>
-              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;">
-                <div style="font-size:24px; margin-bottom:5px;">❤️</div>
-                <div style="font-size:12px; color:#9e9e9e;">Здоровье</div>
-              </div>
+              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;"><div style="font-size:24px; margin-bottom:5px;">👥</div><div style="font-size:12px; color:#9e9e9e;">Окружение</div></div>
+              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;"><div style="font-size:24px; margin-bottom:5px;">💰</div><div style="font-size:12px; color:#9e9e9e;">Ресурсы</div></div>
+              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;"><div style="font-size:24px; margin-bottom:5px;">🧠</div><div style="font-size:12px; color:#9e9e9e;">Навыки</div></div>
+              <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:14px; text-align:center;"><div style="font-size:24px; margin-bottom:5px;">❤️</div><div style="font-size:12px; color:#9e9e9e;">Здоровье</div></div>
             </div>
             <button onclick="startAudit()" style="background:#217346; color:#fff; border:none; border-radius:8px; padding:15px 32px; font-size:15px; font-weight:600; cursor:pointer; width:100%;">Начать аудит</button>
           </div>
         </div>
-
         <div id="audit-question" style="display:none;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
             <div style="font-size:10px; color:#21a366; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Вопрос</div>
@@ -324,15 +246,10 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
             <div id="audit-score-val" style="font-size:36px; font-weight:700; color:#21a366;">5</div>
             <div style="font-size:12px; color:#9e9e9e;">из 10</div>
           </div>
-          <input id="audit-slider" type="range" min="1" max="10" value="5"
-            oninput="document.getElementById('audit-score-val').textContent = this.value"
-            style="width:100%; accent-color:#21a366; margin-bottom:8px; height:6px;">
-          <div style="display:flex; justify-content:space-between; font-size:11px; color:#9e9e9e; margin-bottom:14px;">
-            <span>1 — очень плохо</span><span>10 — отлично</span>
-          </div>
+          <input id="audit-slider" type="range" min="1" max="10" value="5" oninput="document.getElementById('audit-score-val').textContent=this.value" style="width:100%; accent-color:#21a366; margin-bottom:8px; height:6px;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:#9e9e9e; margin-bottom:14px;"><span>1 — очень плохо</span><span>10 — отлично</span></div>
           <button onclick="submitAuditStep()" style="background:#217346; color:#fff; border:none; border-radius:8px; padding:14px; font-size:15px; font-weight:600; cursor:pointer; width:100%;">Далее →</button>
         </div>
-
         <div id="audit-result" style="display:none;">
           <div style="text-align:center; margin-bottom:14px;">
             <canvas id="audit-canvas" width="220" height="220"></canvas>
@@ -346,316 +263,216 @@ body { background: #071e20; color: #fff; max-width: 480px; margin: 0 auto; min-h
       <div class="scroll-pad"></div>
     </div>
 
-  </div><!-- end .content -->
-
-  <div class="bottom-nav">
-    <div class="nav-item active" id="nav-home" onclick="showPage('home')">
-      <div class="nav-icon">🏠</div>
-      <div class="nav-lbl">Главная</div>
-    </div>
-    <div class="nav-item" id="nav-files" onclick="showPage('files')">
-      <div class="nav-icon">📁</div>
-      <div class="nav-lbl">Файлы</div>
-    </div>
-    <div class="nav-item" id="nav-reminders" onclick="showPage('reminders')">
-      <div class="nav-icon">⏰</div>
-      <div class="nav-lbl">Напоминания</div>
-    </div>
-    <div class="nav-item" id="nav-sub" onclick="showPage('sub')">
-      <div class="nav-icon">💎</div>
-      <div class="nav-lbl">Подписка</div>
-    </div>
-    <div class="nav-item" id="nav-audit" onclick="showPage('audit')">
-      <div class="nav-icon">🧠</div>
-      <div class="nav-lbl">Аудит</div>
-    </div>
   </div>
 
-</div><!-- end #main-app -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')"><div class="nav-icon">🏠</div><div class="nav-lbl">Главная</div></div>
+    <div class="nav-item" id="nav-files" onclick="showPage('files')"><div class="nav-icon">📁</div><div class="nav-lbl">Файлы</div></div>
+    <div class="nav-item" id="nav-chat" onclick="showPage('chat')"><div class="nav-icon">💬</div><div class="nav-lbl">Чат</div></div>
+    <div class="nav-item" id="nav-sub" onclick="showPage('sub')"><div class="nav-icon">💎</div><div class="nav-lbl">Подписка</div></div>
+    <div class="nav-item" id="nav-audit" onclick="showPage('audit')"><div class="nav-icon">🧠</div><div class="nav-lbl">Аудит</div></div>
+  </div>
+</div>
 
 <script>
-const W = 180, cx = W/2, cy = W/2;
-const gearCanvas = document.getElementById('gear');
-const gearCtx = gearCanvas.getContext('2d');
-
-function drawGearFrame(rotation) {
-  gearCtx.clearRect(0,0,W,W);
-  gearCtx.save();
-  gearCtx.translate(cx, cy);
-  gearCtx.rotate(rotation);
-  gearCtx.translate(-cx, -cy);
-  const radius = 80;
-  const bg = gearCtx.createLinearGradient(0,0,W,W);
-  bg.addColorStop(0,'#00c9a7');
-  bg.addColorStop(1,'#4facfe');
-  gearCtx.beginPath();
-  gearCtx.roundRect(cx-radius, cy-radius, radius*2, radius*2, 16);
-  gearCtx.fillStyle = bg;
-  gearCtx.fill();
-  const scale = radius / 150;
-  const teeth=12, R1=112*scale, R2=85*scale, hR=32*scale, n=teeth*2;
-  const pts = [];
-  for(let i=0;i<n;i++){
-    const a=(i/n)*Math.PI*2-Math.PI/2;
-    const ro=i%2===0?R1:R2, rn=i%2===0?R2:R1;
-    for(let k=0;k<4;k++){
-      const t=k/4, ac=a+t*(Math.PI*2/n);
-      const rs=i%2===0?ro-(ro-rn)*(3*t*t-2*t*t*t):ro+(rn-ro)*(3*t*t-2*t*t*t);
-      pts.push([cx+rs*Math.cos(ac), cy+rs*Math.sin(ac)]);
-    }
-  }
-  gearCtx.beginPath();
-  gearCtx.moveTo(pts[0][0],pts[0][1]);
-  for(let i=1;i<pts.length;i++) gearCtx.lineTo(pts[i][0],pts[i][1]);
-  gearCtx.closePath();
-  gearCtx.fillStyle='white';
-  gearCtx.fill();
-  const hg=gearCtx.createLinearGradient(0,0,W,W);
-  hg.addColorStop(0,'#00c9a7');
-  hg.addColorStop(1,'#4facfe');
-  gearCtx.beginPath();
-  gearCtx.arc(cx,cy,hR,0,Math.PI*2);
-  gearCtx.fillStyle=hg;
-  gearCtx.fill();
-  gearCtx.restore();
-}
-
-let angle = 0;
-function animateGear() {
-  angle += 0.008;
-  drawGearFrame(angle);
-  requestAnimationFrame(animateGear);
-}
-animateGear();
-
-let progress = 0;
-const bar = document.getElementById('bar');
-const interval = setInterval(() => {
-  progress += Math.random() * 12;
-  if(progress >= 100) {
-    progress = 100;
-    bar.style.width = '100%';
-    clearInterval(interval);
-    setTimeout(hideSplash, 300);
-  } else {
-    bar.style.width = progress + '%';
-  }
-}, 120);
-
-function hideSplash() {
-  const splash = document.getElementById('splash');
-  splash.classList.add('hide');
-  setTimeout(() => {
-    splash.style.display = 'none';
-    const app = document.getElementById('main-app');
-    app.style.display = 'flex';
-    app.style.flexDirection = 'column';
-  }, 500);
-}
-
+const API = 'https://docshelp-production.up.railway.app';
 const tg = window.Telegram.WebApp;
 tg.expand();
 tg.setHeaderColor('#217346');
 tg.setBackgroundColor('#1e1e1e');
 
-function send(text) {
-  tg.openTelegramLink('https://t.me/DocsHelperAI_bot?start=' + encodeURIComponent(text));
+let userId = null;
+let chatMode = 'free';
+
+// ── Gear splash ──
+const W=180, gcx=W/2, gcy=W/2;
+const gc = document.getElementById('gear').getContext('2d');
+function drawGear(rot) {
+  gc.clearRect(0,0,W,W); gc.save();
+  gc.translate(gcx,gcy); gc.rotate(rot); gc.translate(-gcx,-gcy);
+  const r=80, bg=gc.createLinearGradient(0,0,W,W);
+  bg.addColorStop(0,'#00c9a7'); bg.addColorStop(1,'#4facfe');
+  gc.beginPath(); gc.roundRect(gcx-r,gcy-r,r*2,r*2,16); gc.fillStyle=bg; gc.fill();
+  const s=r/150,n=24,R1=112*s,R2=85*s,hR=32*s,pts=[];
+  for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2-Math.PI/2,ro=i%2===0?R1:R2,rn=i%2===0?R2:R1;for(let k=0;k<4;k++){const t=k/4,ac=a+t*(Math.PI*2/n),rs=i%2===0?ro-(ro-rn)*(3*t*t-2*t*t*t):ro+(rn-ro)*(3*t*t-2*t*t*t);pts.push([gcx+rs*Math.cos(ac),gcy+rs*Math.sin(ac)]);}}
+  gc.beginPath(); gc.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++)gc.lineTo(pts[i][0],pts[i][1]);
+  gc.closePath(); gc.fillStyle='white'; gc.fill();
+  const hg=gc.createLinearGradient(0,0,W,W); hg.addColorStop(0,'#00c9a7'); hg.addColorStop(1,'#4facfe');
+  gc.beginPath(); gc.arc(gcx,gcy,hR,0,Math.PI*2); gc.fillStyle=hg; gc.fill(); gc.restore();
+}
+let ang=0; function animGear(){ang+=0.008; drawGear(ang); requestAnimationFrame(animGear);} animGear();
+let prog=0; const bar=document.getElementById('bar');
+const splashInt=setInterval(()=>{prog+=Math.random()*12; if(prog>=100){prog=100;bar.style.width='100%';clearInterval(splashInt);setTimeout(hideSplash,300);}else{bar.style.width=prog+'%';}},120);
+function hideSplash(){const s=document.getElementById('splash');s.classList.add('hide');setTimeout(()=>{s.style.display='none';const a=document.getElementById('main-app');a.style.display='flex';a.style.flexDirection='column';},500);}
+
+// ── Navigation ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const nav=document.getElementById('nav-'+name);
+  if(nav) nav.classList.add('active');
+  document.querySelector('.content').scrollTop=0;
 }
 
-function sendQuick() {
-  const val = document.getElementById('quick-input').value.trim();
-  if (val) { send(val); }
+// ── Open bot for file operations ──
+function openBot(text) {
+  const url='https://t.me/DocsHelperAI_bot?start='+encodeURIComponent(text);
+  try { tg.openTelegramLink(url); } catch(e) { window.open(url,'_blank'); }
 }
 
-document.getElementById('quick-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') sendQuick();
+// ── Chat ──
+const chatModes = {
+  free:     { title: '💬 Свободный чат', prompt: '', chips: ['Объясни тему', 'Помоги с задачей', 'Напиши текст'] },
+  doc:      { title: '📄 Создать документ', prompt: 'Опиши документ который нужно создать. Я напишу текст, а бот сделает Word файл.', chips: ['Реферат по теме...', 'Приказ об отпуске', 'Объяснительная записка', 'Отчёт по практике'] },
+  urgent:   { title: '⚡ Срочный документ', prompt: 'Что нужно срочно? Опиши задание.', chips: ['Реферат за час', 'Доклад по теме...', 'Эссе по...'] },
+  original: { title: '✍️ Повысить оригинальность', prompt: 'Вставь текст — перепишу его оригинально, сохраняя смысл.', chips: [] },
+  help:     { title: '🎓 Помощь с заданием', prompt: 'Опиши задание — разберём вместе.', chips: ['Объясни тему', 'Помоги с задачей', 'Проверь решение'] },
+  consult:  { title: '💬 Консультация', prompt: 'Задай любой вопрос.', chips: ['Как оформить...', 'Что такое...', 'Объясни простыми словами'] },
+};
+
+function openChat(mode) {
+  chatMode = mode;
+  const m = chatModes[mode];
+  document.getElementById('chat-chips').innerHTML = m.chips.map(c=>`<div class="chip" onclick="chipSend('${c}')">${c}</div>`).join('');
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = '';
+  if (m.prompt) addMsg('bot', m.prompt);
+  showPage('chat');
+  setTimeout(()=>document.getElementById('chat-input').focus(), 300);
+}
+
+function addMsg(who, text) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = who==='user' ? 'msg msg-user' : 'msg msg-bot';
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg-typing'; div.id = 'typing';
+  div.textContent = '...';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+function chipSend(text) {
+  document.getElementById('chat-input').value = text;
+  chatSend();
+}
+
+async function chatSend() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ''; input.style.height = 'auto';
+  addMsg('user', text);
+  addTyping();
+
+  try {
+    const resp = await fetch(API + '/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, text: text, model: 'claude' })
+    });
+    const data = await resp.json();
+    removeTyping();
+    if (data.error) {
+      addMsg('bot', '⚠️ ' + data.error);
+    } else {
+      addMsg('bot', data.reply);
+      // Если режим создания документа — предложить отправить в бота
+      if (chatMode === 'doc' || chatMode === 'urgent') {
+        const msgs = document.getElementById('chat-messages');
+        const btn = document.createElement('div');
+        btn.className = 'bot-link-btn';
+        btn.innerHTML = '<span>📄</span> Получить Word файл через бота';
+        btn.onclick = () => openBot(text);
+        msgs.appendChild(btn);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+    }
+  } catch(e) {
+    removeTyping();
+    addMsg('bot', '⚠️ Ошибка соединения. Попробуй ещё раз.');
+  }
+}
+
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatSend(); }
 });
 
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  document.getElementById('nav-' + name).classList.add('active');
-  document.querySelector('.content').scrollTop = 0;
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
 }
 
+// ── Load user data ──
 const initData = tg.initDataUnsafe;
 if (initData && initData.user) {
-  const user = initData.user;
-  document.getElementById('plan-badge').textContent = 'Привет, ' + user.first_name;
-
-  fetch('https://docshelp-production.up.railway.app/user/' + user.id)
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('plan-name').textContent = data.plan_name || 'Пробный';
+  userId = initData.user.id;
+  document.getElementById('plan-badge').textContent = 'Привет, ' + initData.user.first_name;
+  fetch(API + '/user/' + userId)
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('plan-name').textContent = data.plan_name||'Пробный';
       document.getElementById('plan-info').textContent = data.subscribed_until
-        ? 'До ' + new Date(data.subscribed_until).toLocaleDateString('ru') + ' · ' + data.requests_limit + ' запросов/день'
+        ? 'До '+new Date(data.subscribed_until).toLocaleDateString('ru')+' · '+data.requests_limit+' запросов/день'
         : 'Пробный период';
-      document.getElementById('plan-badge').textContent = data.plan_name || 'Пробный';
-      document.getElementById('stat-req').textContent = data.requests_today + '/' + data.requests_limit;
-      document.getElementById('stat-doc').textContent = data.docs_today + '/' + data.docs_limit;
-
-      const history = data.doc_history || [];
-      const histEl = document.getElementById('doc-history');
-      if (history.length === 0) {
-        histEl.innerHTML = '<div style="color:#9e9e9e; font-size:13px; text-align:center; padding:16px;">Документов пока нет</div>';
-      } else {
-        histEl.innerHTML = history.map(d => `
-          <div class="hist-item">
-            <div style="font-size:20px;">📄</div>
-            <div>
-              <div style="font-size:13px; font-weight:600; color:#fff;">${d.title}</div>
-              <div style="font-size:11px; color:#9e9e9e; margin-top:2px;">${d.date}</div>
-            </div>
-          </div>
-        `).join('');
-      }
+      document.getElementById('plan-badge').textContent = data.plan_name||'Пробный';
+      document.getElementById('stat-req').textContent = data.requests_today+'/'+data.requests_limit;
+      document.getElementById('stat-doc').textContent = data.docs_today+'/'+data.docs_limit;
+      const history=data.doc_history||[];
+      const histEl=document.getElementById('doc-history');
+      histEl.innerHTML = history.length===0
+        ? '<div style="color:#9e9e9e; font-size:13px; text-align:center; padding:16px;">Документов пока нет</div>'
+        : history.map(d=>`<div class="hist-item"><div style="font-size:20px;">📄</div><div><div style="font-size:13px; font-weight:600;">${d.title}</div><div style="font-size:11px; color:#9e9e9e; margin-top:2px;">${d.date}</div></div></div>`).join('');
     })
-    .catch(() => {
-      document.getElementById('plan-name').textContent = 'Пробный';
-      document.getElementById('plan-info').textContent = 'Пробный период';
+    .catch(()=>{
+      document.getElementById('plan-name').textContent='Пробный';
+      document.getElementById('plan-info').textContent='Пробный период';
+      document.getElementById('doc-history').innerHTML='<div style="color:#9e9e9e; font-size:13px; text-align:center; padding:16px;">Документов пока нет</div>';
     });
 }
 
-// Audit logic
-let auditScores = {};
-const auditCriteria = [
-  { key: 'env', label: '👥 Окружение', desc: 'Качество отношений и поддержка людей вокруг' },
-  { key: 'res', label: '💰 Ресурсы', desc: 'Финансы, время и энергия' },
-  { key: 'skills', label: '🧠 Навыки', desc: 'Профессиональные и личные компетенции' },
-  { key: 'health', label: '❤️ Здоровье', desc: 'Физическое и эмоциональное состояние' },
+// ── Audit ──
+let auditScores={}, auditStep=0;
+const auditCriteria=[
+  {key:'env',label:'👥 Окружение',desc:'Качество отношений и поддержка людей вокруг'},
+  {key:'res',label:'💰 Ресурсы',desc:'Финансы, время и энергия'},
+  {key:'skills',label:'🧠 Навыки',desc:'Профессиональные и личные компетенции'},
+  {key:'health',label:'❤️ Здоровье',desc:'Физическое и эмоциональное состояние'},
 ];
-let auditStep = 0;
-
-function startAudit() {
-  auditScores = {};
-  auditStep = 0;
-  showAuditStep();
-  document.getElementById('audit-start').style.display = 'none';
-  document.getElementById('audit-question').style.display = 'block';
-  document.getElementById('audit-result').style.display = 'none';
-}
-
-function showAuditStep() {
-  const c = auditCriteria[auditStep];
-  document.getElementById('audit-q-label').textContent = c.label;
-  document.getElementById('audit-q-desc').textContent = c.desc;
-  document.getElementById('audit-progress').textContent = `${auditStep + 1} / ${auditCriteria.length}`;
-  document.getElementById('audit-score-val').textContent = '5';
-  document.getElementById('audit-slider').value = 5;
-}
-
-function submitAuditStep() {
-  const score = parseInt(document.getElementById('audit-slider').value);
-  auditScores[auditCriteria[auditStep].key] = score;
-  auditStep++;
-  if (auditStep < auditCriteria.length) {
-    showAuditStep();
-  } else {
-    showAuditResult();
-  }
-}
-
-function getComment(key, score) {
-  const comments = {
-    env: score >= 8 ? 'Твоё окружение — твоя сила. Береги этих людей.' : score >= 5 ? 'Есть кому довериться, но стоит расширить круг поддержки.' : 'Окружение требует внимания. Ищи людей которые тебя вдохновляют.',
-    res: score >= 8 ? 'Ресурсы под контролем — это даёт свободу действий.' : score >= 5 ? 'Ресурсов хватает, но есть куда расти.' : 'Ресурсы ограничены. Сфокусируйся на главном и убери лишнее.',
-    skills: score >= 8 ? 'Навыки на высоком уровне — продолжай развиваться.' : score >= 5 ? 'Хорошая база. Выбери 1-2 навыка для углублённого развития.' : 'Есть потенциал для роста. Начни с малого — один навык в месяц.',
-    health: score >= 8 ? 'Отличное состояние — это фундамент всего остального.' : score >= 5 ? 'Норм, но стоит добавить больше заботы о себе.' : 'Здоровье требует первоочерёдного внимания. Всё остальное подождёт.',
-  };
-  return comments[key];
-}
-
-function getWish(key, score) {
-  const wishes = {
-    env: score >= 8 ? 'Поблагодари важных людей в своей жизни.' : score >= 5 ? 'Найди 1 человека которому можешь больше доверять.' : 'Запишись на любое групповое занятие — найди своих людей.',
-    res: score >= 8 ? 'Подумай как масштабировать то что работает.' : score >= 5 ? 'Составь простой бюджет на следующий месяц.' : 'Выпиши все расходы за неделю — это первый шаг к контролю.',
-    skills: score >= 8 ? 'Поделись знаниями с кем-то — это закрепит твои навыки.' : score >= 5 ? 'Выдели 30 минут в день на обучение.' : 'Пройди один бесплатный курс по теме которая тебя интересует.',
-    health: score >= 8 ? 'Сохраняй ритм — режим сна и активность решают всё.' : score >= 5 ? 'Добавь 20 минут прогулки каждый день.' : 'Начни с самого простого — стакан воды утром и 10 минут на воздухе.',
-  };
-  return wishes[key];
-}
-
-function showAuditResult() {
-  document.getElementById('audit-question').style.display = 'none';
-  document.getElementById('audit-result').style.display = 'block';
-
-  const scores = auditCriteria.map(c => auditScores[c.key]);
-  const avg = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1);
-
-  const canvas = document.getElementById('audit-canvas');
-  const ctx = canvas.getContext('2d');
-  const cx2 = 110, cy2 = 110, r = 85;
-  ctx.clearRect(0, 0, 220, 220);
-
-  const angles = auditCriteria.map((_, i) => (i * Math.PI * 2 / auditCriteria.length) - Math.PI / 2);
-
-  for (let g = 2; g <= 10; g += 2) {
-    ctx.beginPath();
-    angles.forEach((a, i) => {
-      const x = cx2 + Math.cos(a) * r * g / 10;
-      const y = cy2 + Math.sin(a) * r * g / 10;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
-  }
-
-  angles.forEach(a => {
-    ctx.beginPath();
-    ctx.moveTo(cx2, cy2);
-    ctx.lineTo(cx2 + Math.cos(a) * r, cy2 + Math.sin(a) * r);
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 0.5;
-    ctx.stroke();
-  });
-
-  ctx.beginPath();
-  angles.forEach((a, i) => {
-    const score = auditScores[auditCriteria[i].key];
-    const x = cx2 + Math.cos(a) * r * score / 10;
-    const y = cy2 + Math.sin(a) * r * score / 10;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(33,115,70,0.3)';
-  ctx.fill();
-  ctx.strokeStyle = '#21a366';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#fff';
-  ctx.font = '11px Segoe UI';
-  ctx.textAlign = 'center';
-  const labels = ['👥', '💰', '🧠', '❤️'];
-  angles.forEach((a, i) => {
-    const x = cx2 + Math.cos(a) * (r + 14);
-    const y = cy2 + Math.sin(a) * (r + 14) + 4;
-    ctx.fillText(labels[i], x, y);
-  });
-
-  document.getElementById('audit-avg').textContent = avg + ' / 10';
-
-  let html = '';
-  auditCriteria.forEach(c => {
-    const score = auditScores[c.key];
-    const color = score >= 8 ? '#21a366' : score >= 5 ? '#f39c12' : '#e74c3c';
-    html += `
-      <div style="background:#252525; border:0.5px solid #333; border-radius:8px; padding:12px; margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <div style="font-size:13px; font-weight:600;">${c.label}</div>
-          <div style="font-size:18px; font-weight:700; color:${color};">${score}/10</div>
-        </div>
-        <div style="background:#333; border-radius:4px; height:4px; margin-bottom:8px;">
-          <div style="background:${color}; width:${score*10}%; height:4px; border-radius:4px;"></div>
-        </div>
-        <div style="font-size:12px; color:#ccc; margin-bottom:4px;">${getComment(c.key, score)}</div>
-        <div style="font-size:11px; color:#21a366;">→ ${getWish(c.key, score)}</div>
-      </div>`;
-  });
-  document.getElementById('audit-details').innerHTML = html;
+function startAudit(){auditScores={};auditStep=0;showAuditStep();document.getElementById('audit-start').style.display='none';document.getElementById('audit-question').style.display='block';document.getElementById('audit-result').style.display='none';}
+function showAuditStep(){const c=auditCriteria[auditStep];document.getElementById('audit-q-label').textContent=c.label;document.getElementById('audit-q-desc').textContent=c.desc;document.getElementById('audit-progress').textContent=`${auditStep+1} / ${auditCriteria.length}`;document.getElementById('audit-score-val').textContent='5';document.getElementById('audit-slider').value=5;}
+function submitAuditStep(){const score=parseInt(document.getElementById('audit-slider').value);auditScores[auditCriteria[auditStep].key]=score;auditStep++;if(auditStep<auditCriteria.length)showAuditStep();else showAuditResult();}
+function getComment(k,s){const c={env:s>=8?'Твоё окружение — твоя сила.':s>=5?'Есть поддержка, но стоит расширить круг.':'Ищи людей которые вдохновляют.',res:s>=8?'Ресурсы под контролем.':s>=5?'Есть куда расти.':'Сфокусируйся на главном.',skills:s>=8?'Навыки на высоком уровне.':s>=5?'Выбери 1-2 навыка для углубления.':'Один навык в месяц — хороший старт.',health:s>=8?'Отличное состояние — фундамент всего.':s>=5?'Добавь заботы о себе.':'Здоровье — приоритет номер один.'};return c[k];}
+function getWish(k,s){const w={env:s>=8?'Поблагодари важных людей.':s>=5?'Найди 1 человека которому можешь доверять.':'Запишись на групповое занятие.',res:s>=8?'Масштабируй то что работает.':s>=5?'Составь бюджет на месяц.':'Выпиши расходы за неделю.',skills:s>=8?'Поделись знаниями с кем-то.':s>=5?'30 минут в день на обучение.':'Один бесплатный курс по интересной теме.',health:s>=8?'Сохраняй ритм сна и активности.':s>=5?'20 минут прогулки каждый день.':'Стакан воды утром и 10 минут на воздухе.'};return w[k];}
+function showAuditResult(){
+  document.getElementById('audit-question').style.display='none';
+  document.getElementById('audit-result').style.display='block';
+  const scores=auditCriteria.map(c=>auditScores[c.key]);
+  const avg=(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+  const canvas=document.getElementById('audit-canvas'),ctx=canvas.getContext('2d');
+  const cx2=110,cy2=110,r=85; ctx.clearRect(0,0,220,220);
+  const angles=auditCriteria.map((_,i)=>(i*Math.PI*2/auditCriteria.length)-Math.PI/2);
+  for(let g=2;g<=10;g+=2){ctx.beginPath();angles.forEach((a,i)=>{const x=cx2+Math.cos(a)*r*g/10,y=cy2+Math.sin(a)*r*g/10;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.closePath();ctx.strokeStyle='#333';ctx.lineWidth=0.5;ctx.stroke();}
+  angles.forEach(a=>{ctx.beginPath();ctx.moveTo(cx2,cy2);ctx.lineTo(cx2+Math.cos(a)*r,cy2+Math.sin(a)*r);ctx.strokeStyle='#444';ctx.lineWidth=0.5;ctx.stroke();});
+  ctx.beginPath();angles.forEach((a,i)=>{const s=auditScores[auditCriteria[i].key],x=cx2+Math.cos(a)*r*s/10,y=cy2+Math.sin(a)*r*s/10;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.closePath();ctx.fillStyle='rgba(33,115,70,0.3)';ctx.fill();ctx.strokeStyle='#21a366';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='11px Segoe UI';ctx.textAlign='center';
+  ['👥','💰','🧠','❤️'].forEach((l,i)=>{ctx.fillText(l,cx2+Math.cos(angles[i])*(r+14),cy2+Math.sin(angles[i])*(r+14)+4);});
+  document.getElementById('audit-avg').textContent=avg+' / 10';
+  document.getElementById('audit-details').innerHTML=auditCriteria.map(c=>{const s=auditScores[c.key],col=s>=8?'#21a366':s>=5?'#f39c12':'#e74c3c';return`<div style="background:#252525;border:0.5px solid #333;border-radius:8px;padding:12px;margin-bottom:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:13px;font-weight:600;">${c.label}</div><div style="font-size:18px;font-weight:700;color:${col};">${s}/10</div></div><div style="background:#333;border-radius:4px;height:4px;margin-bottom:8px;"><div style="background:${col};width:${s*10}%;height:4px;border-radius:4px;"></div></div><div style="font-size:12px;color:#ccc;margin-bottom:4px;">${getComment(c.key,s)}</div><div style="font-size:11px;color:#21a366;">→ ${getWish(c.key,s)}</div></div>`;}).join('');
 }
 </script>
 </body>
