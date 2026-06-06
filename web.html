@@ -161,6 +161,7 @@ body{background:#0f1a0f;color:#fff;height:100vh;overflow:hidden;display:flex;}
     <div class="sidebar-nav">
       <div class="sidebar-section" style="padding:0 0 8px;">Разделы</div>
       <div class="nav-link active" id="nav-chat" onclick="showSection('chat')"><div class="nav-link-icon">💬</div> Чат</div>
+      <div class="nav-link" id="nav-files" onclick="showSection('files')"><div class="nav-link-icon">📁</div> Файлы</div>
       <div class="nav-link" id="nav-docs" onclick="showSection('docs')"><div class="nav-link-icon">📄</div> Документы</div>
       <div class="nav-link" id="nav-sub" onclick="showSection('sub')"><div class="nav-link-icon">💎</div> Подписка</div>
     </div>
@@ -196,6 +197,55 @@ body{background:#0f1a0f;color:#fff;height:100vh;overflow:hidden;display:flex;}
           <button class="send-btn" onclick="sendMsg()">↑</button>
         </div>
         <div class="input-hint">Enter — отправить · Shift+Enter — новая строка</div>
+      </div>
+    </div>
+
+    <!-- Files -->
+    <div id="section-files" style="display:none;flex:1;overflow-y:auto;padding:24px;">
+      <div style="max-width:700px;margin:0 auto;">
+        <div style="font-size:20px;font-weight:700;margin-bottom:20px;">Работа с файлами</div>
+
+        <!-- Upload -->
+        <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:12px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">📂 Загрузить файл для анализа</div>
+          <div style="font-size:12px;color:#9e9e9e;margin-bottom:14px;">PDF или Word — задавай вопросы по содержимому в чате</div>
+          <input type="file" id="upload-file" accept=".pdf,.docx,.doc" style="display:none;" onchange="uploadFile()">
+          <button onclick="document.getElementById('upload-file').click()" style="background:#217346;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;">Выбрать файл</button>
+          <div id="upload-status" style="margin-top:10px;font-size:13px;color:#9e9e9e;"></div>
+        </div>
+
+        <!-- Merge -->
+        <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:12px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">📎 Объединить PDF</div>
+          <div style="font-size:12px;color:#9e9e9e;margin-bottom:14px;">Выбери несколько PDF файлов — получишь один</div>
+          <input type="file" id="merge-files" accept=".pdf" multiple style="display:none;" onchange="updateMergeList()">
+          <button onclick="document.getElementById('merge-files').click()" style="background:#252525;color:#ccc;border:1px solid #2d4a2d;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Выбрать файлы</button>
+          <div id="merge-list" style="margin-top:8px;font-size:12px;color:#9e9e9e;"></div>
+          <button id="merge-btn" onclick="mergePdfs()" style="display:none;background:#217346;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;">Объединить</button>
+        </div>
+
+        <!-- Compress -->
+        <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:12px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">🗜️ Сжать PDF</div>
+          <div style="font-size:12px;color:#9e9e9e;margin-bottom:14px;">Уменьши размер PDF файла</div>
+          <input type="file" id="compress-file" accept=".pdf" style="display:none;" onchange="updateCompressName()">
+          <button onclick="document.getElementById('compress-file').click()" style="background:#252525;color:#ccc;border:1px solid #2d4a2d;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Выбрать PDF</button>
+          <div id="compress-name" style="margin-top:8px;font-size:12px;color:#9e9e9e;"></div>
+          <button id="compress-btn" onclick="compressPdf()" style="display:none;background:#217346;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;">Сжать</button>
+        </div>
+
+        <!-- Split -->
+        <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:12px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">✂️ Извлечь страницу из PDF</div>
+          <div style="font-size:12px;color:#9e9e9e;margin-bottom:14px;">Выбери файл и номер страницы</div>
+          <input type="file" id="split-file" accept=".pdf" style="display:none;" onchange="updateSplitName()">
+          <button onclick="document.getElementById('split-file').click()" style="background:#252525;color:#ccc;border:1px solid #2d4a2d;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Выбрать PDF</button>
+          <div id="split-name" style="margin-top:8px;font-size:12px;color:#9e9e9e;"></div>
+          <div id="split-controls" style="display:none;margin-top:10px;display:none;">
+            <input type="number" id="split-page" min="1" value="1" placeholder="Номер страницы" style="background:#0f1a0f;border:1px solid #2d4a2d;border-radius:6px;padding:8px 12px;color:#fff;font-size:13px;outline:none;width:160px;margin-right:10px;">
+            <button onclick="splitPdf()" style="background:#217346;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;">Извлечь</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -448,11 +498,115 @@ function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(e
 
 // ── Sections ──
 function showSection(name) {
-  ['chat','docs','sub'].forEach(s => {
-    document.getElementById('section-'+s).style.display = s === name ? (s === 'chat' ? 'flex' : 'block') : 'none';
-    document.getElementById('nav-'+s).classList.toggle('active', s === name);
+  ['chat','files','docs','sub'].forEach(s => {
+    const el = document.getElementById('section-'+s);
+    if(el) el.style.display = s === name ? (s === 'chat' ? 'flex' : 'block') : 'none';
+    const nav = document.getElementById('nav-'+s);
+    if(nav) nav.classList.toggle('active', s === name);
   });
 }
+
+// ── File operations ──
+async function uploadFile() {
+  const file = document.getElementById('upload-file').files[0];
+  if (!file) return;
+  const status = document.getElementById('upload-status');
+  status.textContent = 'Загружаю...';
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const resp = await fetch(API + '/api/upload', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + token},
+      body: fd
+    });
+    const data = await resp.json();
+    if (data.error) { status.textContent = '⚠️ ' + data.error; return; }
+    status.style.color = '#21a366';
+    status.textContent = `✓ Файл загружен (${data.pages ? data.pages + ' стр.' : 'Word'}) — задавай вопросы в чате!`;
+    setTimeout(() => showSection('chat'), 1500);
+  } catch(e) { status.textContent = '⚠️ Ошибка загрузки'; }
+}
+
+function updateMergeList() {
+  const files = document.getElementById('merge-files').files;
+  const list = document.getElementById('merge-list');
+  const btn = document.getElementById('merge-btn');
+  list.textContent = Array.from(files).map(f => f.name).join(', ');
+  btn.style.display = files.length >= 2 ? 'inline-block' : 'none';
+}
+
+async function mergePdfs() {
+  const files = document.getElementById('merge-files').files;
+  const btn = document.getElementById('merge-btn');
+  btn.textContent = 'Объединяю...'; btn.disabled = true;
+  const fd = new FormData();
+  Array.from(files).forEach(f => fd.append('files', f));
+  try {
+    const resp = await fetch(API + '/api/pdf/merge', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + token},
+      body: fd
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'merged.pdf'; a.click();
+  } catch(e) { alert('Ошибка'); }
+  btn.textContent = 'Объединить'; btn.disabled = false;
+}
+
+function updateCompressName() {
+  const file = document.getElementById('compress-file').files[0];
+  if (!file) return;
+  document.getElementById('compress-name').textContent = file.name;
+  document.getElementById('compress-btn').style.display = 'inline-block';
+}
+
+async function compressPdf() {
+  const file = document.getElementById('compress-file').files[0];
+  const btn = document.getElementById('compress-btn');
+  btn.textContent = 'Сжимаю...'; btn.disabled = true;
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const resp = await fetch(API + '/api/pdf/compress', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + token},
+      body: fd
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'compressed.pdf'; a.click();
+  } catch(e) { alert('Ошибка'); }
+  btn.textContent = 'Сжать'; btn.disabled = false;
+}
+
+function updateSplitName() {
+  const file = document.getElementById('split-file').files[0];
+  if (!file) return;
+  document.getElementById('split-name').textContent = file.name;
+  document.getElementById('split-controls').style.display = 'block';
+}
+
+async function splitPdf() {
+  const file = document.getElementById('split-file').files[0];
+  const page = document.getElementById('split-page').value;
+  const fd = new FormData(); fd.append('file', file); fd.append('page', page);
+  try {
+    const resp = await fetch(API + '/api/pdf/split', {
+      method: 'POST',
+      headers: {'Authorization': 'Bearer ' + token},
+      body: fd
+    });
+    if (!resp.ok) { const d = await resp.json(); alert(d.error); return; }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `page_${page}.pdf`; a.click();
+  } catch(e) { alert('Ошибка'); }
+}
+
+
 
 function openBot(cmd) { window.open('https://t.me/DocsHelperAI_bot?start=' + cmd, '_blank'); }
 
