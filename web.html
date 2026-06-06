@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocsHelper — Веб</title>
+<script src="https://telegram.org/js/telegram-widget.js?22" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#0f1a0f;color:#fff;height:100vh;overflow:hidden;display:flex;}
+
+/* Auth */
+#auth-screen{position:fixed;inset:0;background:#0f1a0f;display:flex;align-items:center;justify-content:center;z-index:999;}
+.auth-box{background:#1a2a1a;border:1px solid #2d4a2d;border-radius:16px;padding:40px;width:100%;max-width:400px;}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.auth-logo-icon{width:44px;height:44px;background:#217346;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid #21a366;}
+.auth-logo-name{font-size:22px;font-weight:700;letter-spacing:2px;background:linear-gradient(135deg,#00c9a7,#4facfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;background:#0f1a0f;border-radius:8px;padding:4px;}
+.auth-tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:600;color:#9e9e9e;cursor:pointer;border-radius:6px;transition:all 0.2s;}
+.auth-tab.active{background:#217346;color:#fff;}
+.auth-form{display:flex;flex-direction:column;gap:12px;}
+.auth-input{background:#0f1a0f;border:1px solid #2d4a2d;border-radius:8px;padding:12px 14px;color:#fff;font-size:14px;outline:none;width:100%;}
+.auth-input:focus{border-color:#21a366;}
+.auth-btn{background:#217346;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;}
+.auth-btn:hover{background:#1a5c38;}
+.auth-err{color:#e74c3c;font-size:12px;text-align:center;display:none;}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:4px 0;color:#555;font-size:12px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#2d4a2d;}
+.tg-login-wrap{display:flex;justify-content:center;}
+
+/* App */
+#app{display:none;flex:1;height:100vh;}
+.sidebar{width:260px;background:#141f14;border-right:1px solid #2d4a2d;display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-header{padding:16px;border-bottom:1px solid #2d4a2d;}
+.sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sidebar-logo-icon{width:32px;height:32px;background:#217346;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #21a366;}
+.sidebar-logo-name{font-size:15px;font-weight:700;background:linear-gradient(135deg,#00c9a7,#4facfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.user-badge{background:#0f1a0f;border:0.5px solid #2d4a2d;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px;}
+.user-badge-avatar{width:28px;height:28px;background:#217346;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.user-badge-name{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.user-badge-plan{font-size:10px;color:#21a366;font-weight:600;}
+.logout-btn{background:none;border:none;color:#555;cursor:pointer;font-size:12px;padding:2px 4px;}
+.logout-btn:hover{color:#e74c3c;}
+
+.sidebar-section{padding:12px 12px 4px;font-size:10px;font-weight:700;color:#21a366;text-transform:uppercase;letter-spacing:1px;}
+.new-chat-btn{margin:8px 12px;background:#217346;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;width:calc(100% - 24px);}
+.new-chat-btn:hover{background:#1a5c38;}
+
+.chat-list{flex:1;overflow-y:auto;padding:8px;}
+.chat-item{padding:10px 10px;border-radius:8px;cursor:pointer;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.chat-item:hover{background:#1e2e1e;}
+.chat-item.active{background:#2d4a2d;}
+.chat-item-icon{font-size:16px;flex-shrink:0;}
+.chat-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.chat-item-del{background:none;border:none;color:#555;cursor:pointer;font-size:14px;opacity:0;flex-shrink:0;}
+.chat-item:hover .chat-item-del{opacity:1;}
+.chat-item-del:hover{color:#e74c3c;}
+
+.sidebar-nav{padding:8px 12px 16px;}
+.nav-link{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:#9e9e9e;margin-bottom:2px;}
+.nav-link:hover{background:#1e2e1e;color:#fff;}
+.nav-link.active{background:#2d4a2d;color:#21a366;}
+.nav-link-icon{font-size:16px;}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.main-header{background:#141f14;border-bottom:1px solid #2d4a2d;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.main-title{font-size:16px;font-weight:600;flex:1;}
+.model-select{background:#0f1a0f;border:1px solid #2d4a2d;color:#ccc;border-radius:6px;padding:6px 10px;font-size:12px;outline:none;cursor:pointer;}
+.model-select:focus{border-color:#21a366;}
+
+.chat-area{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:16px;}
+.msg-row{display:flex;gap:12px;max-width:800px;margin:0 auto;width:100%;}
+.msg-row.user{flex-direction:row-reverse;}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px;}
+.msg-avatar.bot{background:#217346;border:1px solid #21a366;}
+.msg-avatar.user{background:#2d4a2d;}
+.msg-bubble{background:#1a2a1a;border:0.5px solid #2d4a2d;border-radius:12px;padding:12px 16px;font-size:14px;line-height:1.6;color:#e0e0e0;max-width:calc(100% - 44px);white-space:pre-wrap;word-break:break-word;}
+.msg-row.user .msg-bubble{background:#1a3a2a;border-color:#217346;color:#fff;}
+.msg-typing-bubble{background:#1a2a1a;border:0.5px solid #2d4a2d;border-radius:12px;padding:12px 16px;color:#9e9e9e;font-size:14px;}
+
+.welcome{text-align:center;padding:60px 20px;max-width:600px;margin:auto;}
+.welcome-icon{font-size:56px;margin-bottom:16px;}
+.welcome-title{font-size:26px;font-weight:700;margin-bottom:8px;}
+.welcome-sub{font-size:14px;color:#9e9e9e;margin-bottom:32px;line-height:1.6;}
+.quick-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.quick-btn{background:#1a2a1a;border:1px solid #2d4a2d;border-radius:10px;padding:16px;text-align:left;cursor:pointer;transition:border-color 0.2s;}
+.quick-btn:hover{border-color:#217346;}
+.quick-btn-icon{font-size:20px;margin-bottom:6px;}
+.quick-btn-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.quick-btn-desc{font-size:11px;color:#9e9e9e;}
+
+.input-area{background:#141f14;border-top:1px solid #2d4a2d;padding:16px 20px;flex-shrink:0;}
+.input-wrap{background:#0f1a0f;border:1px solid #2d4a2d;border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:flex-end;max-width:800px;margin:0 auto;}
+.input-wrap:focus-within{border-color:#217346;}
+.input-wrap textarea{flex:1;background:none;border:none;color:#fff;font-size:14px;outline:none;resize:none;font-family:inherit;max-height:160px;line-height:1.5;}
+.send-btn{background:#217346;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:18px;cursor:pointer;flex-shrink:0;align-self:flex-end;}
+.send-btn:hover{background:#1a5c38;}
+.input-hint{text-align:center;font-size:11px;color:#555;margin-top:8px;max-width:800px;margin-left:auto;margin-right:auto;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#2d4a2d;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- Auth -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">📋</div>
+      <div class="auth-logo-name">DOCSHELPER</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Вход</div>
+      <div class="auth-tab" onclick="switchTab('register')">Регистрация</div>
+    </div>
+    <div class="auth-form" id="auth-form">
+      <input class="auth-input" id="auth-email" type="email" placeholder="Email">
+      <input class="auth-input" id="auth-password" type="password" placeholder="Пароль">
+      <div class="auth-err" id="auth-err"></div>
+      <button class="auth-btn" id="auth-submit-btn" onclick="authSubmit()">Войти</button>
+      <div class="auth-divider">или</div>
+      <div class="tg-login-wrap">
+        <script async src="https://telegram.org/js/telegram-widget.js?22"
+          data-telegram-login="DocsHelperAI_bot"
+          data-size="large"
+          data-onauth="onTelegramAuth(user)"
+          data-request-access="write">
+        </script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">📋</div>
+        <div class="sidebar-logo-name">DOCSHELPER</div>
+      </div>
+      <div class="user-badge">
+        <div class="user-badge-avatar" id="user-avatar">?</div>
+        <div style="flex:1;min-width:0;">
+          <div class="user-badge-name" id="user-name">...</div>
+          <div class="user-badge-plan" id="user-plan">...</div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Выйти">✕</button>
+      </div>
+    </div>
+
+    <button class="new-chat-btn" onclick="newChat()">＋ Новый чат</button>
+
+    <div class="sidebar-section">Чаты</div>
+    <div class="chat-list" id="chat-list"></div>
+
+    <div class="sidebar-nav">
+      <div class="sidebar-section" style="padding:0 0 8px;">Разделы</div>
+      <div class="nav-link active" id="nav-chat" onclick="showSection('chat')"><div class="nav-link-icon">💬</div> Чат</div>
+      <div class="nav-link" id="nav-docs" onclick="showSection('docs')"><div class="nav-link-icon">📄</div> Документы</div>
+      <div class="nav-link" id="nav-sub" onclick="showSection('sub')"><div class="nav-link-icon">💎</div> Подписка</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Chat -->
+    <div id="section-chat" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div class="main-header">
+        <div class="main-title" id="chat-title">Новый чат</div>
+        <select class="model-select" id="model-select">
+          <option value="claude">Claude Sonnet</option>
+          <option value="gpt">GPT-4o</option>
+          <option value="gemini">Gemini 2.5</option>
+        </select>
+      </div>
+      <div class="chat-area" id="chat-area">
+        <div class="welcome" id="welcome-screen">
+          <div class="welcome-icon">📋</div>
+          <div class="welcome-title">DocsHelper</div>
+          <div class="welcome-sub">AI-помощник для студентов и офисных работников.<br>Создаю документы, рефераты, отчёты по ГОСТу.</div>
+          <div class="quick-btns">
+            <div class="quick-btn" onclick="quickMsg('Создай реферат')"><div class="quick-btn-icon">📄</div><div class="quick-btn-title">Создать документ</div><div class="quick-btn-desc">Word по ГОСТу</div></div>
+            <div class="quick-btn" onclick="quickMsg('Помоги с заданием')"><div class="quick-btn-icon">🎓</div><div class="quick-btn-title">Помощь с заданием</div><div class="quick-btn-desc">Объясню и помогу</div></div>
+            <div class="quick-btn" onclick="quickMsg('Перепиши текст оригинально')"><div class="quick-btn-icon">✍️</div><div class="quick-btn-title">Оригинальность</div><div class="quick-btn-desc">Переписать текст</div></div>
+            <div class="quick-btn" onclick="quickMsg('Задай любой вопрос')"><div class="quick-btn-icon">💬</div><div class="quick-btn-title">Консультация</div><div class="quick-btn-desc">Задай вопрос</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrap">
+          <textarea id="main-input" placeholder="Напиши сообщение..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+          <button class="send-btn" onclick="sendMsg()">↑</button>
+        </div>
+        <div class="input-hint">Enter — отправить · Shift+Enter — новая строка</div>
+      </div>
+    </div>
+
+    <!-- Docs -->
+    <div id="section-docs" style="display:none;flex:1;overflow-y:auto;padding:24px;">
+      <div style="max-width:700px;margin:0 auto;">
+        <div style="font-size:20px;font-weight:700;margin-bottom:16px;">История документов</div>
+        <div id="doc-list" style="color:#9e9e9e;font-size:14px;text-align:center;padding:40px;">Загрузка...</div>
+      </div>
+    </div>
+
+    <!-- Sub -->
+    <div id="section-sub" style="display:none;flex:1;overflow-y:auto;padding:24px;">
+      <div style="max-width:700px;margin:0 auto;">
+        <div style="font-size:20px;font-weight:700;margin-bottom:16px;">Подписка</div>
+        <div id="sub-info" style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:12px;padding:20px;margin-bottom:20px;">Загрузка...</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:12px;">Тарифы</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:10px;padding:16px;cursor:pointer;" onclick="openBot('buy_base')">
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Базовый</div>
+            <div style="font-size:22px;font-weight:700;color:#21a366;margin-bottom:4px;">550₽</div>
+            <div style="font-size:12px;color:#9e9e9e;">50 запросов · 5 документов</div>
+          </div>
+          <div style="background:#1a2a1a;border:1px solid #217346;border-radius:10px;padding:16px;cursor:pointer;position:relative;" onclick="openBot('buy_standard')">
+            <div style="position:absolute;top:-10px;left:16px;background:#217346;color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:2px 10px;">Хит</div>
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Стандарт</div>
+            <div style="font-size:22px;font-weight:700;color:#21a366;margin-bottom:4px;">990₽</div>
+            <div style="font-size:12px;color:#9e9e9e;">50 запросов · 20 документов</div>
+          </div>
+          <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:10px;padding:16px;cursor:pointer;" onclick="openBot('buy_pro')">
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Про</div>
+            <div style="font-size:22px;font-weight:700;color:#21a366;margin-bottom:4px;">1400₽</div>
+            <div style="font-size:12px;color:#9e9e9e;">50 запросов · 60 документов</div>
+          </div>
+          <div style="background:#1a2a1a;border:1px solid #2d4a2d;border-radius:10px;padding:16px;cursor:pointer;" onclick="openBot('buy_max')">
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Максимум</div>
+            <div style="font-size:22px;font-weight:700;color:#21a366;margin-bottom:4px;">2500₽</div>
+            <div style="font-size:12px;color:#9e9e9e;">Безлимит запросов · 999 документов</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:#9e9e9e;">Оплата через Telegram бота: <a href="https://t.me/DocsHelperAI_bot" style="color:#21a366;">@DocsHelperAI_bot</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://docshelp-production.up.railway.app';
+let token = localStorage.getItem('dh_web_token');
+let userId = localStorage.getItem('dh_web_uid');
+let currentChatId = null;
+let isRegister = false;
+
+// ── Auth ──
+function switchTab(tab) {
+  isRegister = tab === 'register';
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&!isRegister)||(i===1&&isRegister)));
+  document.getElementById('auth-submit-btn').textContent = isRegister ? 'Зарегистрироваться' : 'Войти';
+  document.getElementById('auth-err').style.display = 'none';
+}
+
+async function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-err');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Заполни все поля'; errEl.style.display = 'block'; return; }
+  const endpoint = isRegister ? '/auth/register' : '/auth/login';
+  try {
+    const resp = await fetch(API + endpoint, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await resp.json();
+    if (data.error) { errEl.textContent = data.error; errEl.style.display = 'block'; return; }
+    saveSession(data.token, data.user_id, email.split('@')[0]);
+  } catch(e) { errEl.textContent = 'Ошибка соединения'; errEl.style.display = 'block'; }
+}
+
+async function onTelegramAuth(user) {
+  try {
+    const resp = await fetch(API + '/auth/telegram', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(user)
+    });
+    const data = await resp.json();
+    if (data.error) { alert(data.error); return; }
+    saveSession(data.token, data.user_id, data.name || user.username || user.first_name);
+  } catch(e) { alert('Ошибка авторизации'); }
+}
+
+function saveSession(t, uid, name) {
+  token = t; userId = uid;
+  localStorage.setItem('dh_web_token', t);
+  localStorage.setItem('dh_web_uid', uid);
+  localStorage.setItem('dh_web_name', name);
+  initApp(name);
+}
+
+function logout() {
+  localStorage.removeItem('dh_web_token');
+  localStorage.removeItem('dh_web_uid');
+  localStorage.removeItem('dh_web_name');
+  token = null; userId = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── App init ──
+async function initApp(name) {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  const n = name || localStorage.getItem('dh_web_name') || 'Пользователь';
+  document.getElementById('user-avatar').textContent = n[0].toUpperCase();
+  document.getElementById('user-name').textContent = n;
+  document.getElementById('user-plan').textContent = 'Загрузка...';
+  try {
+    const resp = await fetch(API + '/auth/me', {headers: {'Authorization': 'Bearer ' + token}});
+    const data = await resp.json();
+    if (!data.error) {
+      document.getElementById('user-plan').textContent = data.plan_name;
+      document.getElementById('sub-info').innerHTML = `
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px;">Тариф: ${data.plan_name}</div>
+        <div style="font-size:13px;color:#9e9e9e;">Для продления и оплаты перейди в <a href="https://t.me/DocsHelperAI_bot" style="color:#21a366;">бот</a></div>`;
+    }
+  } catch(e) {}
+  renderChatList();
+  newChat();
+}
+
+// ── Chats ──
+function getChats() { try { return JSON.parse(localStorage.getItem('dh_web_chats') || '[]'); } catch(e) { return []; } }
+function saveChats(c) { localStorage.setItem('dh_web_chats', JSON.stringify(c)); }
+
+function newChat() {
+  const id = Date.now();
+  const chats = getChats();
+  chats.unshift({id, name: 'Новый чат', messages: [], created: new Date().toLocaleDateString('ru')});
+  saveChats(chats);
+  openChat(id);
+  renderChatList();
+}
+
+function openChat(id) {
+  currentChatId = id;
+  const chats = getChats();
+  const chat = chats.find(c => c.id === id);
+  if (!chat) return;
+  document.getElementById('chat-title').textContent = chat.name;
+  const area = document.getElementById('chat-area');
+  const welcome = document.getElementById('welcome-screen');
+  if (chat.messages.length === 0) {
+    area.innerHTML = '';
+    area.appendChild(welcome);
+    welcome.style.display = 'block';
+  } else {
+    area.innerHTML = '';
+    chat.messages.forEach(m => addMsgDOM(m.role, m.content));
+  }
+  renderChatList();
+}
+
+function deleteChat(id, e) {
+  e.stopPropagation();
+  const chats = getChats().filter(c => c.id !== id);
+  saveChats(chats);
+  if (currentChatId === id) { if (chats.length > 0) openChat(chats[0].id); else newChat(); }
+  renderChatList();
+}
+
+function renderChatList() {
+  const chats = getChats();
+  const list = document.getElementById('chat-list');
+  if (chats.length === 0) { list.innerHTML = '<div style="color:#555;font-size:12px;text-align:center;padding:16px;">Нет чатов</div>'; return; }
+  list.innerHTML = chats.map(c => `
+    <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="openChat(${c.id})">
+      <div class="chat-item-icon">💬</div>
+      <div class="chat-item-name">${c.name}</div>
+      <button class="chat-item-del" onclick="deleteChat(${c.id}, event)">✕</button>
+    </div>`).join('');
+}
+
+// ── Messaging ──
+function addMsgDOM(role, text) {
+  const welcome = document.getElementById('welcome-screen');
+  if (welcome) welcome.style.display = 'none';
+  const area = document.getElementById('chat-area');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role === 'user' ? 'user' : ''}`;
+  row.innerHTML = `
+    <div class="msg-avatar ${role === 'user' ? 'user' : 'bot'}">${role === 'user' ? '👤' : '🤖'}</div>
+    <div class="msg-bubble">${text}</div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addTypingDOM() {
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'msg-row'; div.id = 'typing-row';
+  div.innerHTML = '<div class="msg-avatar bot">🤖</div><div class="msg-typing-bubble">...</div>';
+  area.appendChild(div); area.scrollTop = area.scrollHeight;
+}
+function removeTypingDOM() { const t = document.getElementById('typing-row'); if(t) t.remove(); }
+
+function quickMsg(text) { document.getElementById('main-input').value = text; sendMsg(); }
+
+async function sendMsg() {
+  const input = document.getElementById('main-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ''; input.style.height = 'auto';
+  const model = document.getElementById('model-select').value;
+
+  addMsgDOM('user', text);
+  addTypingDOM();
+
+  const chats = getChats();
+  const chat = chats.find(c => c.id === currentChatId);
+  if (chat) {
+    if (chat.messages.length === 0) {
+      chat.name = text.slice(0, 40);
+      document.getElementById('chat-title').textContent = chat.name;
+    }
+    chat.messages.push({role: 'user', content: text});
+    saveChats(chats);
+    renderChatList();
+  }
+
+  try {
+    const resp = await fetch(API + '/api/web_ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
+      body: JSON.stringify({text, model})
+    });
+    const data = await resp.json();
+    removeTypingDOM();
+    if (data.error) { addMsgDOM('bot', '⚠️ ' + data.error); }
+    else {
+      addMsgDOM('bot', data.reply);
+      const chats2 = getChats();
+      const chat2 = chats2.find(c => c.id === currentChatId);
+      if (chat2) { chat2.messages.push({role: 'assistant', content: data.reply}); saveChats(chats2); }
+    }
+  } catch(e) { removeTypingDOM(); addMsgDOM('bot', '⚠️ Ошибка соединения.'); }
+}
+
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
+
+// ── Sections ──
+function showSection(name) {
+  ['chat','docs','sub'].forEach(s => {
+    document.getElementById('section-'+s).style.display = s === name ? (s === 'chat' ? 'flex' : 'block') : 'none';
+    document.getElementById('nav-'+s).classList.toggle('active', s === name);
+  });
+}
+
+function openBot(cmd) { window.open('https://t.me/DocsHelperAI_bot?start=' + cmd, '_blank'); }
+
+// ── Boot ──
+if (token && userId) {
+  initApp(localStorage.getItem('dh_web_name') || 'Пользователь');
+}
+</script>
+</body>
+</html>
