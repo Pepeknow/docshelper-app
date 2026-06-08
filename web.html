@@ -980,30 +980,6 @@ body{color:var(--text-primary);min-height:100vh;overflow:hidden;display:flex;}
   </div>
 </div>
 
-
-    <div id="section-sub" style="display:none;flex:1;overflow-y:auto;">
-      <div>
-        <div class="section-title">Подписка</div>
-        <div class="section-card">
-          <div id="sub-info">Загрузка...</div>
-        </div>
-        <div class="section-title" style="margin-top:24px;">Тарифы</div>
-        <div class="plan-grid">
-          <div class="plan-card" onclick="openBot('buy_base')">
-            <div style="font-size:15px;font-weight:600;">Базовый</div>
-            <div class="plan-price">550₽</div>
-            <div style="font-size:12px;color:var(--text-secondary);">50 запросов · 5 документов</div>
-          </div>
-          <div class="plan-card" style="border-color:var(--accent);" onclick="openBot('buy_standard')">
-            <div style="position:absolute;top:-12px;left:16px;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white;font-size:10px;font-weight:700;border-radius:16px;padding:4px 12px;">Хит</div>
-            <div style="font-size:15px;font-weight:600;">Стандарт</div>
-            <div class="plan-price">990₽</div>
-            <div style="font-size:12px;color:var(--text-secondary);">100 запросов · 20 документов</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
 <script>
 const API = 'https://docshelp-production.up.railway.app';
 let token = localStorage.getItem('dh_web_token');
@@ -1256,8 +1232,11 @@ function showSection(name) {
 
 function setStyle(name) {
   localStorage.setItem('dh_web_style', name);
-  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  const styles = ['notion', 'glassmorphism', 'neumorphism', 'cyberpunk', 'midnight', 'forest'];
+  document.querySelectorAll('.style-btn').forEach((b, i) => {
+    if(styles[i] === name) b.classList.add('active');
+    else b.classList.remove('active');
+  });
   document.body.className = 'style-' + name;
 }
 
