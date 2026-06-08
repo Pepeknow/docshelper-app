@@ -890,11 +890,13 @@ body{color:var(--text-primary);min-height:100vh;overflow:hidden;display:flex;}
     <div id="section-chat" style="display:flex;flex-direction:column;flex:1;min-height:0;">
       <div class="main-header">
         <div class="main-title" id="chat-title">Новый чат</div>
-        <select class="model-select" id="model-select">
+        <select class="model-select" id="model-select" onchange="updateEngineeringLimit()">
           <option value="claude">Claude Sonnet</option>
           <option value="gpt">GPT-4o</option>
           <option value="gemini">Gemini 2.5</option>
+          <option value="engineering">🔬 Инженерные расчеты</option>
         </select>
+        <div id="engineering-limit" style="display:none;margin-top:8px;font-size:12px;color:var(--accent);font-weight:600;">Осталось: <span id="limit-count">0</span> запросов</div>
       </div>
       <div class="chat-area" id="chat-area">
         <div class="welcome" id="welcome-screen">
@@ -1039,6 +1041,17 @@ async function initApp(name) {
     if (!data.error) {
       document.getElementById('user-plan').textContent = data.plan_name;
       document.getElementById('sub-info').innerHTML = `Тариф: ${data.plan_name}`;
+      
+      localStorage.setItem('dh_web_plan', data.plan || 'trial');
+      if (data.plan === 'pro') {
+        localStorage.setItem('dh_eng_limit', '5');
+      } else if (data.plan === 'max') {
+        localStorage.setItem('dh_eng_limit', '15');
+      } else {
+        localStorage.setItem('dh_eng_limit', '0');
+      }
+      localStorage.setItem('dh_eng_used', '0');
+      updateEngineeringLimit();
     }
   } catch(e) {}
   renderChatList();
@@ -1106,12 +1119,45 @@ function addMsgDOM(role, text) {
 
 function quickMsg(text) { document.getElementById('main-input').value = text; sendMsg(); }
 
+function updateEngineeringLimit() {
+  const model = document.getElementById('model-select').value;
+  const limitEl = document.getElementById('engineering-limit');
+  const countEl = document.getElementById('limit-count');
+  
+  if (model === 'engineering') {
+    const limit = parseInt(localStorage.getItem('dh_eng_limit') || '0');
+    const used = parseInt(localStorage.getItem('dh_eng_used') || '0');
+    const remaining = Math.max(0, limit - used);
+    countEl.textContent = remaining;
+    limitEl.style.display = 'block';
+  } else {
+    limitEl.style.display = 'none';
+  }
+}
+
 async function sendMsg() {
   const input = document.getElementById('main-input');
   const text = input.value.trim();
   if (!text) return;
   input.value = ''; input.style.height = 'auto';
   const model = document.getElementById('model-select').value;
+
+  if (model === 'engineering') {
+    const plan = localStorage.getItem('dh_web_plan');
+    const limit = localStorage.getItem('dh_eng_limit') || '0';
+    const used = localStorage.getItem('dh_eng_used') || '0';
+    const remaining = parseInt(limit) - parseInt(used);
+    
+    if (plan === 'base' || plan === 'standard') {
+      addMsgDOM('bot', '⚠️ Инженерные расчеты доступны только на Pro (5/день) и Максимум (15/день)');
+      return;
+    }
+    
+    if (remaining <= 0) {
+      addMsgDOM('bot', '⚠️ Лимит расчетов исчерпан. Завтра лимит обновится.');
+      return;
+    }
+  }
 
   addMsgDOM('user', text);
 
@@ -1137,6 +1183,11 @@ async function sendMsg() {
     if (data.error) { addMsgDOM('bot', '⚠️ ' + data.error); }
     else {
       addMsgDOM('bot', data.reply);
+      if (model === 'engineering' && data.success) {
+        const used = (parseInt(localStorage.getItem('dh_eng_used') || '0') + 1).toString();
+        localStorage.setItem('dh_eng_used', used);
+        updateEngineeringLimit();
+      }
       const chats2 = getChats();
       const chat2 = chats2.find(c => c.id === currentChatId);
       if (chat2) { chat2.messages.push({role: 'assistant', content: data.reply}); saveChats(chats2); }
