@@ -1233,15 +1233,20 @@ function showSection(name) {
 function setStyle(name) {
   localStorage.setItem('dh_web_style', name);
   document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`[onclick="setStyle('${name}')"]`).classList.add('active');
-  document.body.classList.toggle('dark-theme', name === 'dark');
+  event.target.classList.add('active');
+  document.body.className = 'style-' + name;
 }
 
-(function(){
-  const saved = localStorage.getItem('dh_web_style') || 'light';
-  if(saved === 'dark') document.body.classList.add('dark-theme');
-  document.querySelector(`[onclick="setStyle('${saved}')"]`)?.classList.add('active');
-})();
+function initStyle() {
+  const saved = localStorage.getItem('dh_web_style') || 'notion';
+  document.body.className = 'style-' + saved;
+  const styles = ['notion', 'glassmorphism', 'neumorphism', 'cyberpunk', 'midnight', 'forest'];
+  document.querySelectorAll('.style-btn').forEach((b, i) => {
+    if(styles[i] === saved) b.classList.add('active');
+  });
+}
+
+initStyle();
 
 function openBot(cmd) { window.open('https://t.me/DocsHelperAI_bot?start=' + cmd, '_blank'); }
 
