@@ -980,25 +980,6 @@ body{color:var(--text-primary);min-height:100vh;overflow:hidden;display:flex;}
   </div>
 </div>
 
-<div id="section-files" style="display:none;flex:1;overflow-y:auto;">
-      <div>
-        <div class="section-title">Работа с файлами</div>
-        <div class="section-card">
-          <div class="section-card-title">📂 Загрузить файл</div>
-          <div class="section-card-desc">PDF или Word — задавай вопросы в чате</div>
-          <input type="file" id="upload-file" accept=".pdf,.docx,.doc" style="display:none;" onchange="uploadFile()">
-          <button onclick="document.getElementById('upload-file').click()" style="background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;">Выбрать</button>
-          <div id="upload-status" style="margin-top:10px;font-size:13px;color:var(--text-secondary);"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="section-docs" style="display:none;flex:1;overflow-y:auto;">
-      <div>
-        <div class="section-title">История документов</div>
-        <div id="doc-list" style="color:var(--text-secondary);font-size:14px;text-align:center;padding:40px;">Загрузка...</div>
-      </div>
-    </div>
 
     <div id="section-sub" style="display:none;flex:1;overflow-y:auto;">
       <div>
