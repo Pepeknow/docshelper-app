@@ -27,56 +27,80 @@ body.dark-theme{
 }
 
 /* ── Themes ── */
-body.style-glassmorphism {
-  --accent:#00d4ff;
-  --accent-light:#00f0ff;
+body.style-notion{
+  --accent:#6366f1;
+  --accent-light:#818cf8;
+  --text-primary:#1a1a1a;
+  --text-secondary:#666666;
   --bg-primary:#ffffff;
-  --bg-secondary:#f0f8ff;
-  --border:#e0f7ff;
+  --bg-secondary:#f7f8fa;
+  --border:#e5e7eb;
+  background:#eef0f4;
+}
+
+body.style-glassmorphism {
+  --accent:#0091c7;
+  --accent-light:#00b4d8;
+  --text-primary:#0a2540;
+  --text-secondary:#4a6a85;
+  --bg-primary:rgba(255,255,255,0.55);
+  --bg-secondary:rgba(255,255,255,0.25);
+  --border:rgba(255,255,255,0.7);
+  background:linear-gradient(135deg,#a8d8ea,#aee1f9,#c7ceea,#d4a5e8);
+  background-attachment:fixed;
 }
 
 body.style-neumorphism {
-  --accent:#6366f1;
+  --accent:#5a67d8;
   --accent-light:#818cf8;
-  --bg-primary:#e8eef7;
-  --bg-secondary:#d4dce8;
+  --text-primary:#2d3748;
+  --text-secondary:#5a6478;
+  --bg-primary:#e4ebf5;
+  --bg-secondary:#dbe3f0;
   --border:#c0cfe0;
+  background:#dde4ee;
 }
 
 body.style-cyberpunk {
   --accent:#ff00ff;
   --accent-light:#ff33ff;
-  --text-primary:#00ff00;
-  --text-secondary:#00cc00;
-  --bg-primary:#0a0e27;
-  --bg-secondary:#1a1f3a;
-  --border:#00ff00;
+  --text-primary:#00ff9f;
+  --text-secondary:#00cc88;
+  --bg-primary:#140a30;
+  --bg-secondary:#0d0620;
+  --border:#ff00ff;
+  background:linear-gradient(135deg,#0a0e27,#1a0a2e,#0d0221,#1a0f3a);
+  background-attachment:fixed;
 }
 
 body.style-midnight {
   --accent:#9d4edd;
   --accent-light:#c77dff;
-  --text-primary:#e0e0e0;
-  --text-secondary:#a0a0a0;
-  --bg-primary:#0d0221;
-  --bg-secondary:#2a1a47;
+  --text-primary:#ece0ff;
+  --text-secondary:#b8a8d0;
+  --bg-primary:#1a0d35;
+  --bg-secondary:#13092a;
   --border:#5a3a7a;
+  background:linear-gradient(135deg,#0d0221,#1a0a3a,#2a1a47,#0d0221);
+  background-attachment:fixed;
 }
 
 body.style-forest {
   --accent:#2d6a4f;
   --accent-light:#40916c;
   --text-primary:#1b3a2e;
-  --text-secondary:#52796f;
-  --bg-primary:#f1faee;
-  --bg-secondary:#d8f3dc;
+  --text-secondary:#3d6354;
+  --bg-primary:#f4fbf6;
+  --bg-secondary:#e3f3e8;
   --border:#95d5b2;
+  background:linear-gradient(135deg,#b7e4c7,#95d5b2,#74c69d,#52b788);
+  background-attachment:fixed;
 }
 
 /* ── Global ── */
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}
 html{scroll-behavior:smooth;}
-body{color:var(--text-primary);background:var(--bg-primary);min-height:100vh;overflow:hidden;display:flex;}
+body{color:var(--text-primary);background:var(--bg-secondary);min-height:100vh;overflow:hidden;display:flex;}
 
 /* ── DVD Background Animation ── */
 @keyframes dvdBounce {
@@ -313,6 +337,8 @@ body{color:var(--text-primary);background:var(--bg-primary);min-height:100vh;ove
 .sidebar{
   width:280px;
   background:var(--bg-primary);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
   border-right:1px solid var(--border);
   display:flex;
   flex-direction:column;
@@ -542,10 +568,12 @@ body{color:var(--text-primary);background:var(--bg-primary);min-height:100vh;ove
 .nav-link-icon{font-size:18px;}
 
 /* ── Main ── */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg-secondary);}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:transparent;}
 
 .main-header{
   background:var(--bg-primary);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   padding:16px 24px;
   display:flex;
@@ -580,7 +608,7 @@ body{color:var(--text-primary);background:var(--bg-primary);min-height:100vh;ove
   display:flex;
   flex-direction:column;
   gap:16px;
-  background:var(--bg-secondary);
+  background:transparent;
 }
 
 .msg-row{
@@ -688,6 +716,8 @@ body{color:var(--text-primary);background:var(--bg-primary);min-height:100vh;ove
 
 .input-area{
   background:var(--bg-primary);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
   border-top:1px solid var(--border);
   padding:18px 20px;
   flex-shrink:0;
