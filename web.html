@@ -12,7 +12,18 @@
   --accent-light:#818cf8;
   --text-primary:#1a1a1a;
   --text-secondary:#666666;
+  --bg-primary:#ffffff;
+  --bg-secondary:#f9fafb;
+  --border:#e5e7eb;
   --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+body.dark-theme{
+  --text-primary:#e0e0e0;
+  --text-secondary:#a0a0a0;
+  --bg-primary:#1a1a1a;
+  --bg-secondary:#2a2a2a;
+  --border:#444444;
 }
 
 /* ── Global ── */
@@ -1215,7 +1226,18 @@ function showSection(name) {
   });
 }
 
-function setStyle(name) { localStorage.setItem('dh_web_style', name); }
+function setStyle(name) {
+  localStorage.setItem('dh_web_style', name);
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[onclick="setStyle('${name}')"]`).classList.add('active');
+  document.body.classList.toggle('dark-theme', name === 'dark');
+}
+
+(function(){
+  const saved = localStorage.getItem('dh_web_style') || 'light';
+  if(saved === 'dark') document.body.classList.add('dark-theme');
+  document.querySelector(`[onclick="setStyle('${saved}')"]`)?.classList.add('active');
+})();
 
 function openBot(cmd) { window.open('https://t.me/DocsHelperAI_bot?start=' + cmd, '_blank'); }
 
