@@ -1248,7 +1248,7 @@ function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(e
 function showSection(name) {
   ['chat','files','docs','sub'].forEach(s => {
     const el = document.getElementById('section-'+s);
-    if(el) el.style.display = s === name ? (s === 'chat' ? 'flex' : 'block') : 'none';
+    if(el) el.style.display = s === name ? 'flex' : 'none';
     const nav = document.getElementById('nav-'+s);
     if(nav) nav.classList.toggle('active', s === name);
   });
