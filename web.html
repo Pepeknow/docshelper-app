@@ -972,6 +972,14 @@ let userId = localStorage.getItem('dh_web_uid');
 let currentChatId = null;
 let isRegister = false;
 
+// Скрыть splash после загрузки
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    if (splash) splash.style.display = 'none';
+  }, 1500);
+});
+
 // ── Auth ──
 function switchTab(tab) {
   isRegister = tab === 'register';
@@ -1212,7 +1220,12 @@ function setStyle(name) { localStorage.setItem('dh_web_style', name); }
 function openBot(cmd) { window.open('https://t.me/DocsHelperAI_bot?start=' + cmd, '_blank'); }
 
 // ── Boot ──
-if (token && userId) initApp(localStorage.getItem('dh_web_name') || 'Пользователь');
+if (token && userId) {
+  initApp(localStorage.getItem('dh_web_name') || 'Пользователь');
+} else {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
 </script>
 </body>
 </html>
