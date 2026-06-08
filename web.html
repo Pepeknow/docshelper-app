@@ -1284,7 +1284,10 @@ function setStyle(name) {
     if(styles[i] === name) b.classList.add('active');
     else b.classList.remove('active');
   });
-  document.body.className = 'style-' + name;
+  // Remove old style classes
+  styles.forEach(s => document.body.classList.remove('style-' + s));
+  // Add new style class
+  document.body.classList.add('style-' + name);
 }
 
 function initStyle() {
