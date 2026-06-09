@@ -1264,6 +1264,458 @@ body{
   }
 }
 
+
+/* ─────────────────────────────────────────────
+   MOBILE APP UI v2 — телефонный вид как приложение
+   Вставлено для красивой адаптации под телефоны.
+   ───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    display: block;
+    background: linear-gradient(145deg, #d8f4ff 0%, #eef2ff 48%, #f5e8ff 100%);
+  }
+
+  #dvd-bg {
+    display: none;
+  }
+
+  #app {
+    width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  /* Верхняя панель вместо десктопного сайдбара */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.48);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+  }
+
+  .sidebar-header {
+    padding: 10px 12px 8px;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .sidebar-logo {
+    margin: 0;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .sidebar-logo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+  }
+
+  .sidebar-logo-name {
+    display: block;
+    font-size: 18px;
+    font-weight: 850;
+    letter-spacing: -0.6px;
+    white-space: nowrap;
+  }
+
+  .user-badge {
+    max-width: 150px;
+    padding: 7px 9px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.68);
+    border: 1px solid rgba(255,255,255,0.75);
+    box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+  }
+
+  .user-badge-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .user-badge-name {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .user-badge-plan,
+  .sidebar-section,
+  .style-picker,
+  .chat-list {
+    display: none !important;
+  }
+
+  .new-chat-btn {
+    width: calc(100% - 20px);
+    margin: 8px 10px 9px;
+    padding: 13px 14px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 800;
+    box-shadow: 0 10px 26px rgba(0,145,199,0.25);
+  }
+
+  /* Вкладки как в мобильном приложении */
+  .sidebar-nav {
+    padding: 0 8px 9px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-link {
+    flex: 0 0 auto;
+    min-width: 86px;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.38);
+    color: rgba(10,37,64,0.72);
+    font-size: 13px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  .nav-link.active {
+    background: rgba(255,255,255,0.82);
+    color: var(--accent);
+    box-shadow: 0 8px 22px rgba(15,23,42,0.08);
+  }
+
+  .nav-link-icon {
+    font-size: 17px;
+  }
+
+  /* Главная зона */
+  .main {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+  }
+
+  .main-header {
+    flex: 0 0 auto;
+    padding: 9px 12px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.36);
+    border-bottom: 1px solid rgba(255,255,255,0.42);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .main-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    flex-basis: auto;
+    font-size: 17px;
+    font-weight: 850;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .model-select {
+    flex: 0 0 160px;
+    width: 160px;
+    max-width: 48vw;
+    padding: 9px 10px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 650;
+    background: rgba(255,255,255,0.74);
+    border: 1px solid rgba(255,255,255,0.75);
+  }
+
+  .chat-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 14px 12px 18px;
+    gap: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: transparent;
+  }
+
+  .welcome {
+    max-width: 100%;
+    padding: 16px 0 92px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  .welcome-icon {
+    display: none;
+  }
+
+  .welcome-title {
+    font-size: 22px;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .welcome-sub {
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0 0 16px;
+  }
+
+  .quick-btns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+
+  .quick-btn {
+    width: 100%;
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    padding: 16px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.72);
+    background: rgba(255,255,255,0.62);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 10px 28px rgba(15,23,42,0.07);
+  }
+
+  .quick-btn:hover {
+    transform: none;
+  }
+
+  .quick-btn-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border-radius: 15px;
+    background: rgba(255,255,255,0.72);
+    font-size: 24px;
+  }
+
+  .quick-btn-text {
+    min-width: 0;
+  }
+
+  .quick-btn-title {
+    font-size: 16px;
+    font-weight: 850;
+    margin-bottom: 3px;
+  }
+
+  .quick-btn-desc {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .msg-row {
+    max-width: 100%;
+    gap: 8px;
+  }
+
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .msg-bubble,
+  .msg-typing-bubble {
+    max-width: calc(100% - 42px);
+    padding: 12px 14px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.5;
+    background: rgba(255,255,255,0.68);
+    border: 1px solid rgba(255,255,255,0.70);
+    box-shadow: 0 6px 18px rgba(15,23,42,0.05);
+  }
+
+  .msg-row.user .msg-bubble {
+    border: none;
+    box-shadow: 0 8px 22px rgba(0,145,199,0.18);
+  }
+
+  /* Поле ввода как в мессенджере */
+  .input-area {
+    flex: 0 0 auto;
+    padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,0.56);
+    border-top: 1px solid rgba(255,255,255,0.55);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+  }
+
+  .input-wrap {
+    max-width: 100%;
+    margin: 0;
+    padding: 7px 7px 7px 14px;
+    gap: 8px;
+    align-items: flex-end;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(255,255,255,0.78);
+    box-shadow: 0 8px 26px rgba(15,23,42,0.10);
+  }
+
+  .input-wrap textarea {
+    min-height: 40px;
+    max-height: 112px;
+    padding: 9px 0 7px;
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  .send-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    font-size: 20px;
+    box-shadow: 0 8px 18px rgba(0,145,199,0.22);
+  }
+
+  .input-hint {
+    display: none;
+  }
+
+  #section-files,
+  #section-docs,
+  #section-sub {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 16px 12px 90px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #section-files > div,
+  #section-docs > div,
+  #section-sub > div {
+    max-width: 100%;
+  }
+
+  .section-title {
+    font-size: 22px;
+    letter-spacing: -0.4px;
+  }
+
+  .section-card,
+  .plan-card {
+    border-radius: 18px;
+    background: rgba(255,255,255,0.62);
+    border: 1px solid rgba(255,255,255,0.72);
+    box-shadow: 0 10px 28px rgba(15,23,42,0.07);
+  }
+
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-box {
+    width: calc(100% - 24px);
+    max-width: 420px;
+    padding: 26px 20px;
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 420px) {
+  .sidebar-header {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .sidebar-logo-name {
+    font-size: 17px;
+  }
+
+  .user-badge {
+    max-width: 128px;
+  }
+
+  .nav-link {
+    min-width: 78px;
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+
+  .model-select {
+    flex-basis: 145px;
+    width: 145px;
+  }
+
+  .quick-btn {
+    min-height: 72px;
+    padding: 14px 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .sidebar-logo-name {
+    display: none;
+  }
+
+  .user-badge {
+    max-width: 118px;
+  }
+
+  .model-select {
+    flex-basis: 132px;
+    width: 132px;
+    font-size: 12px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1366,10 +1818,10 @@ body{
           <div class="welcome-title">DocsHelper</div>
           <div class="welcome-sub">AI-помощник для студентов и профессионалов.<br>Создаю документы, рефераты, отчёты по ГОСТу.</div>
           <div class="quick-btns">
-            <div class="quick-btn" onclick="quickMsg('Создай реферат')"><div class="quick-btn-icon">📄</div><div class="quick-btn-title">Документ</div><div class="quick-btn-desc">Word по ГОСТу</div></div>
-            <div class="quick-btn" onclick="quickMsg('Помоги с заданием')"><div class="quick-btn-icon">🎓</div><div class="quick-btn-title">Помощь</div><div class="quick-btn-desc">Объясню и помогу</div></div>
-            <div class="quick-btn" onclick="quickMsg('Перепиши текст оригинально')"><div class="quick-btn-icon">✍️</div><div class="quick-btn-title">Оригинальность</div><div class="quick-btn-desc">Переписать</div></div>
-            <div class="quick-btn" onclick="quickMsg('Задай вопрос')"><div class="quick-btn-icon">💬</div><div class="quick-btn-title">Консультация</div><div class="quick-btn-desc">Вопросы и ответы</div></div>
+            <button class="quick-btn" onclick="quickMsg('Объясни этот документ простыми словами')"><div class="quick-btn-icon">📄</div><div class="quick-btn-text"><div class="quick-btn-title">Объяснить документ</div><div class="quick-btn-desc">Кратко и понятно</div></div></button>
+            <button class="quick-btn" onclick="quickMsg('Помоги с заданием')"><div class="quick-btn-icon">🎓</div><div class="quick-btn-text"><div class="quick-btn-title">Помощь с заданием</div><div class="quick-btn-desc">Разбор по шагам</div></div></button>
+            <button class="quick-btn" onclick="quickMsg('Перепиши текст оригинально')"><div class="quick-btn-icon">✍️</div><div class="quick-btn-text"><div class="quick-btn-title">Оригинальность</div><div class="quick-btn-desc">Переписать текст</div></div></button>
+            <button class="quick-btn" onclick="quickMsg('Задай вопрос')"><div class="quick-btn-icon">💬</div><div class="quick-btn-text"><div class="quick-btn-title">Консультация</div><div class="quick-btn-desc">Вопросы и ответы</div></div></button>
           </div>
         </div>
       </div>
