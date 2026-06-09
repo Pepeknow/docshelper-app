@@ -3,8 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocsHelper — Веб</title>
-<script src="https://telegram.org/js/telegram-widget.js?22" async></script>
+<title>DocsHelper — Updated Tariffs</title>
+<script src="https://telegram.org/js/telegram-widget.js?22" async>
+// ── Secret Admin MVP ──
+const ADMIN_PASSWORD = 'admin123';
+
+function getAdminSubscriptions(){try{return JSON.parse(localStorage.getItem('dh_admin_subscriptions')||'{}')}catch(e){return {}}}
+function saveAdminSubscriptions(data){localStorage.setItem('dh_admin_subscriptions',JSON.stringify(data))}
+function normalizeAdminUser(v){return String(v||'').trim().toLowerCase()}
+function setAdminStatus(id,msg,type){const el=document.getElementById(id);if(!el)return;el.textContent=msg||'';el.className='admin-status'+(type?' '+type:'')}
+function adminLogin(){const p=document.getElementById('admin-password').value;if(p!==ADMIN_PASSWORD){setAdminStatus('admin-login-status','Неверный пароль','bad');return}sessionStorage.setItem('dh_admin_unlocked','1');renderAdminPanel()}
+function adminLogout(){sessionStorage.removeItem('dh_admin_unlocked');renderAdminPanel()}
+function renderAdminPanel(){const unlocked=sessionStorage.getItem('dh_admin_unlocked')==='1';const lock=document.getElementById('admin-lock-card');const panel=document.getElementById('admin-panel');if(!lock||!panel)return;lock.style.display=unlocked?'none':'block';panel.classList.toggle('active',unlocked);if(unlocked)renderAdminSubscriptions()}
+function grantSubscription(){const user=normalizeAdminUser(document.getElementById('grant-user').value);const plan=document.getElementById('grant-plan').value;const days=parseInt(document.getElementById('grant-days').value,10);if(!user){setAdminStatus('grant-status','Введите email или username','bad');return}const now=Date.now();const expiresAt=days>=9999?4102444800000:now+days*86400000;const subs=getAdminSubscriptions();subs[user]={user,plan,grantedAt:now,expiresAt,source:'manual_admin'};saveAdminSubscriptions(subs);const currentEmail=normalizeAdminUser(localStorage.getItem('dh_web_email')||'');const currentName=normalizeAdminUser(localStorage.getItem('dh_web_name')||'');if(user===currentEmail||user===currentName||user==='@'+currentName){localStorage.setItem('dh_web_plan',plan);localStorage.setItem('dh_web_plan_expires',String(expiresAt))}setAdminStatus('grant-status',`Подписка ${plan.toUpperCase()} выдана до ${formatAdminDate(expiresAt)}`,'ok');renderAdminSubscriptions()}
+function lookupSubscription(){const user=normalizeAdminUser(document.getElementById('lookup-user').value);const el=document.getElementById('lookup-result');if(!user){el.textContent='Введите email или username.';return}const sub=getAdminSubscriptions()[user];if(!sub){el.innerHTML=`<b>${escapeHtml(user)}</b><br>Подписка не найдена.`;return}const active=sub.expiresAt>Date.now();el.innerHTML=`<b>${escapeHtml(user)}</b><br>Тариф: <b>${escapeHtml(sub.plan.toUpperCase())}</b><br>Действует до: <b>${formatAdminDate(sub.expiresAt)}</b><br>Статус: <b style="color:${active?'#059669':'#ef4444'}">${active?'активна':'истекла'}</b>`}
+function renderAdminSubscriptions(){const body=document.getElementById('admin-subscriptions-body');if(!body)return;const subs=Object.values(getAdminSubscriptions()).sort((a,b)=>b.grantedAt-a.grantedAt);if(!subs.length){body.innerHTML=`<tr><td colspan="5" style="color:var(--text-secondary)">Пока нет выданных подписок.</td></tr>`;return}body.innerHTML=subs.map(sub=>{const active=sub.expiresAt>Date.now();return `<tr><td>${escapeHtml(sub.user)}</td><td><b>${escapeHtml(sub.plan.toUpperCase())}</b></td><td>${formatAdminDate(sub.expiresAt)}</td><td style="color:${active?'#059669':'#ef4444'};font-weight:800">${active?'Активна':'Истекла'}</td><td><button class="admin-remove-btn" onclick="removeSubscription('${escapeAttr(sub.user)}')">Удалить</button></td></tr>`}).join('')}
+function removeSubscription(user){const subs=getAdminSubscriptions();delete subs[user];saveAdminSubscriptions(subs);renderAdminSubscriptions()}
+function formatAdminDate(ts){if(Number(ts)>=4102444800000)return 'навсегда';return new Date(Number(ts)).toLocaleDateString('ru-RU',{year:'numeric',month:'long',day:'numeric'})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function escapeAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+function getManualPlanForCurrentUser(){const email=normalizeAdminUser(localStorage.getItem('dh_web_email')||'');const name=normalizeAdminUser(localStorage.getItem('dh_web_name')||'');const subs=getAdminSubscriptions();for(const key of [email,name,name?'@'+name:''].filter(Boolean)){const sub=subs[key];if(sub&&sub.expiresAt>Date.now())return sub}return null}
+setTimeout(renderAdminPanel,700);setInterval(renderAdminPanel,4000);
+
+
+function selectPlan(planKey){
+  const plan = DOCSHELPER_PLANS[planKey];
+  if(!plan){ alert('Тариф не найден'); return; }
+
+  localStorage.setItem('dh_selected_plan', planKey);
+
+  if(plan.price === 0){
+    localStorage.setItem('dh_web_plan', planKey);
+    localStorage.setItem('dh_web_plan_expires', '0');
+    alert('Пробный тариф активирован. Можно начинать пользоваться DocsHelper.');
+    return;
+  }
+
+  const period = plan.days === 1 ? '1 день' : plan.days + ' дней';
+  alert(`Вы выбрали тариф “${plan.name}” за ${plan.price} ₽.\n\nЛимиты: ${plan.requests} запросов, ${plan.docs} документов.\nСрок: ${period}.\n\nДальше подключим оплату или выдачу через админ-панель.`);
+}
+
+function getPlanDisplayName(planKey){
+  return (window.DOCSHELPER_PLANS && DOCSHELPER_PLANS[planKey] && DOCSHELPER_PLANS[planKey].name) || String(planKey || 'Free');
+}
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://unpkg.com/mathlive"></script>
 <style>
@@ -2437,6 +2480,168 @@ body{
   .raffle-btn{width:100%;}
 }
 
+
+/* ── Email Verification UI ── */
+.email-verify-box{
+  display:none;
+  background:linear-gradient(135deg,rgba(20,184,166,.10),rgba(59,130,246,.10));
+  border:1px solid rgba(20,184,166,.22);
+  border-radius:16px;
+  padding:14px;
+  margin-top:4px;
+  animation:fadeInUp .25s ease;
+}
+.email-verify-box.active{display:block;}
+.verify-title{
+  font-size:15px;
+  font-weight:800;
+  color:var(--text-primary);
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.verify-desc{
+  font-size:13px;
+  color:var(--text-secondary);
+  line-height:1.55;
+  margin-bottom:12px;
+}
+.verify-code-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.verify-code-row .auth-input{
+  text-align:center;
+  letter-spacing:5px;
+  font-size:18px;
+  font-weight:800;
+}
+.verify-mini-btn{
+  border:none;
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:800;
+  color:white;
+  background:linear-gradient(135deg,var(--accent),var(--accent-light));
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(99,102,241,.18);
+}
+.verify-links{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+.verify-link{
+  border:none;
+  background:transparent;
+  color:var(--accent);
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+  padding:0;
+}
+.verify-status{
+  margin-top:10px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--text-secondary);
+}
+.verify-status.ok{color:#059669;}
+.verify-status.bad{color:#ef4444;}
+.auth-legal{
+  display:none;
+  align-items:flex-start;
+  gap:8px;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--text-secondary);
+  background:rgba(255,255,255,.5);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+}
+.auth-legal.active{display:flex;}
+.auth-legal input{margin-top:2px;flex-shrink:0;}
+.auth-legal a{color:var(--accent);text-decoration:none;font-weight:700;}
+.auth-legal a:hover{text-decoration:underline;}
+.email-verified-badge{
+  display:none;
+  margin-top:-6px;
+  font-size:12px;
+  color:#059669;
+  font-weight:800;
+}
+.email-verified-badge.active{display:block;}
+@media(max-width:768px){
+  .verify-code-row{flex-direction:column;}
+  .verify-mini-btn{width:100%;}
+  .verify-code-row .auth-input{width:100%;}
+}
+
+
+/* ── Double-sided DocsCoin + Secret Admin ── */
+.raffle-coin-3d{transform-style:preserve-3d;position:relative}
+.raffle-coin-3d::before,.raffle-coin-3d::after{
+  content:"";position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;
+  background-image:url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M80 14l13 24 27-7-2 28 26 10-20 19 12 26-28 3-8 27-20-19-20 19-8-27-28-3 12-26-20-19 26-10-2-28 27 7z'/%3E%3Ccircle cx='80' cy='80' r='22' fill='%231ac9d2'/%3E%3C/svg%3E"),radial-gradient(circle at 35% 28%,rgba(255,255,255,.45),transparent 22%),linear-gradient(135deg,#18d4c0 0%,#2196f3 100%);
+  background-size:58% 58%,auto,auto;background-position:center;background-repeat:no-repeat;
+  border:6px solid rgba(255,255,255,.86);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.28),inset 0 0 0 13px rgba(0,70,150,.10),0 16px 35px rgba(37,99,235,.22)
+}
+.raffle-coin-3d::before{transform:translateZ(8px)}
+.raffle-coin-3d::after{transform:rotateY(180deg) translateZ(8px)}
+.raffle-coin-logo{opacity:0}
+@keyframes docsCoinSpinEdge{0%{transform:rotateY(0deg) rotateZ(-2deg)}25%{transform:rotateY(90deg) rotateZ(1deg)}50%{transform:rotateY(180deg) rotateZ(2deg)}75%{transform:rotateY(270deg) rotateZ(-1deg)}100%{transform:rotateY(360deg) rotateZ(-2deg)}}
+.raffle-coin-3d{animation:docsCoinSpinEdge 2.4s linear infinite}
+
+.admin-lock-card,.admin-panel,.admin-card{background:rgba(255,255,255,.74);border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 14px 34px rgba(15,23,42,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.admin-lock-card{max-width:520px;margin:24px auto;text-align:center}
+.admin-lock-icon{width:68px;height:68px;border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:30px;background:linear-gradient(135deg,rgba(20,184,166,.14),rgba(59,130,246,.14));border:1px solid rgba(20,184,166,.22)}
+.admin-lock-card h3,.admin-panel h3,.admin-card h4{margin:0 0 8px;color:var(--text-primary)}
+.admin-lock-card p,.admin-top p{margin:0 0 16px;color:var(--text-secondary);font-size:14px}
+.admin-input{width:100%;border:1px solid var(--border);border-radius:14px;padding:13px 14px;background:rgba(255,255,255,.86);color:var(--text-primary);font-size:15px;outline:none;margin:7px 0 12px}
+.admin-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(20,184,166,.10)}
+.admin-main-btn,.admin-secondary-btn,.admin-logout-btn{border:none;border-radius:14px;padding:13px 16px;cursor:pointer;font-weight:800;transition:.2s ease}
+.admin-main-btn{width:100%;color:white;background:linear-gradient(135deg,var(--accent),var(--accent-light));box-shadow:0 10px 24px rgba(59,130,246,.18)}
+.admin-secondary-btn{color:var(--accent);background:rgba(20,184,166,.10);border:1px solid rgba(20,184,166,.18)}
+.admin-secondary-btn.small{padding:8px 11px;font-size:12px}
+.admin-logout-btn{color:#ef4444;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18)}
+.admin-status{min-height:18px;margin-top:10px;font-size:13px;font-weight:700;color:var(--text-secondary)}
+.admin-status.ok{color:#059669}.admin-status.bad{color:#ef4444}
+.admin-hint,.admin-note{margin-top:14px;font-size:12px;line-height:1.5;color:var(--text-secondary);background:rgba(255,247,237,.8);border:1px solid #fed7aa;border-radius:14px;padding:12px}
+.admin-panel{display:none}.admin-panel.active{display:block}
+.admin-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:18px}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.admin-card label{display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-top:8px}
+.admin-result{margin-top:14px;padding:14px;border-radius:14px;background:rgba(248,250,252,.8);border:1px solid var(--border);color:var(--text-secondary);font-size:14px;line-height:1.6}
+.admin-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.admin-table-wrap{overflow:auto}.admin-table{width:100%;border-collapse:collapse;font-size:14px}.admin-table th,.admin-table td{padding:11px 9px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}.admin-table th{color:var(--text-secondary);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.admin-remove-btn{border:none;border-radius:10px;padding:7px 10px;cursor:pointer;color:#ef4444;background:rgba(239,68,68,.08);font-weight:800}
+@media(max-width:768px){.admin-grid{grid-template-columns:1fr}.admin-top{flex-direction:column}.admin-lock-card,.admin-panel,.admin-card{padding:16px;border-radius:18px}}
+
+
+/* ── Updated Tariff Cards ── */
+.plan-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+.plan-card{position:relative;overflow:hidden;}
+.plan-card.featured::before,.plan-card.max::before{position:absolute;top:14px;right:-36px;transform:rotate(38deg);color:white;font-size:11px;font-weight:900;padding:7px 40px;box-shadow:0 8px 22px rgba(59,130,246,.22);background:linear-gradient(135deg,var(--accent),var(--accent-light));}
+.plan-card.featured::before{content:"Лучший выбор";}
+.plan-card.max::before{content:"Максимум";}
+.plan-price-rub{font-size:34px;font-weight:900;color:var(--text-primary);margin:10px 0 4px;}
+.plan-period{color:var(--text-secondary);font-size:13px;margin-bottom:16px;}
+.plan-limits{display:grid;gap:9px;margin:16px 0;}
+.plan-limit{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(248,250,252,.72);border:1px solid var(--border);font-size:13px;}
+.plan-limit b{color:var(--text-primary);}
+.plan-badge-soft{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(20,184,166,.10);color:var(--accent);font-size:12px;font-weight:800;border:1px solid rgba(20,184,166,.16);}
+.plan-action-row{display:flex;gap:8px;margin-top:16px;}
+.plan-action-row .plan-btn{flex:1;}
+@media(max-width:768px){.plan-grid{grid-template-columns:1fr;}.plan-price-rub{font-size:30px;}}
+
 </style>
 </head>
 <body>
@@ -2461,9 +2666,34 @@ body{
     </div>
     <div class="auth-form" id="auth-form">
       <input class="auth-input" id="auth-email" type="email" placeholder="Email">
+      <div class="email-verified-badge" id="email-verified-badge">✅ Email подтверждён</div>
       <input class="auth-input" id="auth-password" type="password" placeholder="Пароль">
+      <label class="auth-legal" id="auth-legal">
+        <input type="checkbox" id="auth-legal-check">
+        <span>
+          Я принимаю <a href="/legal/user-agreement.html" target="_blank">Пользовательское соглашение</a>,
+          <a href="/legal/privacy-policy.html" target="_blank">Политику конфиденциальности</a>
+          и даю согласие на обработку персональных данных.
+        </span>
+      </label>
       <div class="auth-err" id="auth-err"></div>
       <button class="auth-btn" id="auth-submit-btn" onclick="authSubmit()">Войти</button>
+
+      <div class="email-verify-box" id="email-verify-box">
+        <div class="verify-title">📩 Подтверждение email</div>
+        <div class="verify-desc" id="verify-desc">
+          Мы отправили код подтверждения на почту. Введите 6 цифр, чтобы активировать аккаунт.
+        </div>
+        <div class="verify-code-row">
+          <input class="auth-input" id="email-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000">
+          <button class="verify-mini-btn" onclick="verifyEmailCode()">Подтвердить</button>
+        </div>
+        <div class="verify-links">
+          <button class="verify-link" onclick="resendEmailCode()">Отправить код ещё раз</button>
+          <button class="verify-link" onclick="cancelEmailVerify()">Изменить email</button>
+        </div>
+        <div class="verify-status" id="verify-status"></div>
+      </div>
       <div class="auth-divider">или</div>
       <div class="tg-login-wrap">
         <script async src="https://telegram.org/js/telegram-widget.js?22"
@@ -2886,31 +3116,172 @@ H = 0.15 m"></textarea>
     </div>
 
     <div id="section-sub" style="display:none;flex:1;overflow-y:auto;">
+
       <div>
-        <div class="section-title">Подписка</div>
+        <div class="section-title">💎 Подписка</div>
+        <div class="section-subtitle">Выбери тариф DocsHelper под свои задачи: от пробного доступа до максимальных лимитов.</div>
         <div class="section-card">
           <div id="sub-info">Загрузка...</div>
         </div>
         <div class="section-title" style="margin-top:24px;">Тарифы</div>
-        <div class="plan-grid">
-          <div class="plan-card" onclick="openBot('buy_base')">
-            <div style="font-size:15px;font-weight:600;">Базовый</div>
-            <div class="plan-price">550₽</div>
-            <div style="font-size:12px;color:var(--text-secondary);">50 запросов · 5 документов</div>
+        <div class="plan-grid" id="plans-grid">
+
+          <div class="plan-card" data-plan="trial">
+            <div class="plan-badge-soft">💎 Пробный</div>
+            <h3>Пробный</h3>
+            <p>Для первого знакомства с DocsHelper</p>
+            <div class="plan-price-rub">0 ₽</div>
+            <div class="plan-period">Срок: без срока</div>
+            <div class="plan-limits">
+              <div class="plan-limit"><span>AI-запросы</span><b>100</b></div>
+              <div class="plan-limit"><span>Документы</span><b>15</b></div>
+              <div class="plan-limit"><span>Доступ</span><b>без срока</b></div>
+            </div>
+            <div class="plan-action-row">
+              <button class="plan-btn" onclick="selectPlan('trial')">Активировать</button>
+            </div>
           </div>
-          <div class="plan-card" style="border-color:var(--accent);" onclick="openBot('buy_standard')">
-            <div style="position:absolute;top:-12px;left:16px;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white;font-size:10px;font-weight:700;border-radius:16px;padding:4px 12px;">Хит</div>
-            <div style="font-size:15px;font-weight:600;">Стандарт</div>
-            <div class="plan-price">990₽</div>
-            <div style="font-size:12px;color:var(--text-secondary);">100 запросов · 20 документов</div>
+
+          <div class="plan-card" data-plan="mega">
+            <div class="plan-badge-soft">💎 Мега</div>
+            <h3>Мега</h3>
+            <p>Суточный мощный доступ для активной работы</p>
+            <div class="plan-price-rub">399 ₽</div>
+            <div class="plan-period">Срок: 1 день</div>
+            <div class="plan-limits">
+              <div class="plan-limit"><span>AI-запросы</span><b>200</b></div>
+              <div class="plan-limit"><span>Документы</span><b>50</b></div>
+              <div class="plan-limit"><span>Доступ</span><b>1 день</b></div>
+            </div>
+            <div class="plan-action-row">
+              <button class="plan-btn" onclick="selectPlan('mega')">Выбрать тариф</button>
+            </div>
+          </div>
+
+          <div class="plan-card" data-plan="base">
+            <div class="plan-badge-soft">💎 Базовый</div>
+            <h3>Базовый</h3>
+            <p>Недорогой старт на месяц</p>
+            <div class="plan-price-rub">550 ₽</div>
+            <div class="plan-period">Срок: 30 дней</div>
+            <div class="plan-limits">
+              <div class="plan-limit"><span>AI-запросы</span><b>50</b></div>
+              <div class="plan-limit"><span>Документы</span><b>20</b></div>
+              <div class="plan-limit"><span>Доступ</span><b>30 дней</b></div>
+            </div>
+            <div class="plan-action-row">
+              <button class="plan-btn" onclick="selectPlan('base')">Выбрать тариф</button>
+            </div>
+          </div>
+
+          <div class="plan-card featured" data-plan="standard">
+            <div class="plan-badge-soft">💎 Стандарт</div>
+            <h3>Стандарт</h3>
+            <p>Оптимальный баланс цены и лимитов</p>
+            <div class="plan-price-rub">990 ₽</div>
+            <div class="plan-period">Срок: 30 дней</div>
+            <div class="plan-limits">
+              <div class="plan-limit"><span>AI-запросы</span><b>100</b></div>
+              <div class="plan-limit"><span>Документы</span><b>50</b></div>
+              <div class="plan-limit"><span>Доступ</span><b>30 дней</b></div>
+            </div>
+            <div class="plan-action-row">
+              <button class="plan-btn" onclick="selectPlan('standard')">Выбрать тариф</button>
+            </div>
+          </div>
+
+          <div class="plan-card" data-plan="pro">
+            <div class="plan-badge-soft">💎 Про</div>
+            <h3>Про</h3>
+            <p>Для частой работы с документами и AI</p>
+            <div class="plan-price-rub">1 990 ₽</div>
+            <div class="plan-period">Срок: 30 дней</div>
+            <div class="plan-limits">
+              <div class="plan-limit"><span>AI-запросы</span><b>300</b></div>
+              <div class="plan-limit"><span>Документы</span><b>100</b></div>
+              <div class="plan-limit"><span>Доступ</span><b>30 дней</b></div>
+            </div>
+            <div class="plan-action-row">
+              <button class="plan-btn" onclick="selectPlan('pro')">Выбрать тариф</button>
+            </div>
+          </div>
+
+          <div class="plan-card max" data-plan="max">
+            <div class="plan-badge-soft">💎 Максимум</div>
+            <h3>Максимум</h3>
+            <p>Максимальные лимиты для тяжёлых задач</p>
+            <div class="plan-price-rub">4 500 ₽</div>
+            <div class="plan-period">Срок: 30 дней</div>
+            <div class="plan-limits">
+              <div class="plan-limit"><span>AI-запросы</span><b>9999</b></div>
+              <div class="plan-limit"><span>Документы</span><b>999</b></div>
+              <div class="plan-limit"><span>Доступ</span><b>30 дней</b></div>
+            </div>
+            <div class="plan-action-row">
+              <button class="plan-btn" onclick="selectPlan('max')">Выбрать тариф</button>
+            </div>
           </div>
         </div>
+        <p class="section-hint" style="margin-top:14px;color:var(--text-secondary);font-size:13px;">
+          Тариф “Максимум” использует высокий лимит 9999 запросов в рамках технических ограничений сервиса.
+        </p>
       </div>
     </div>
-  </div>
-</div>
-
 <script>
+const DOCSCOIN_PLAN_MULTIPLIERS = {
+  trial: 1.0,
+  mega: 1.2,
+  base: 1.1,
+  standard: 1.35,
+  pro: 1.7,
+  max: 2.5
+};
+
+const DOCSHELPER_PLANS = {
+  "trial": {
+    "name": "Пробный",
+    "price": 0,
+    "requests": 100,
+    "docs": 15,
+    "days": 0
+  },
+  "mega": {
+    "name": "Мега",
+    "price": 399,
+    "requests": 200,
+    "docs": 50,
+    "days": 1
+  },
+  "base": {
+    "name": "Базовый",
+    "price": 550,
+    "requests": 50,
+    "docs": 20,
+    "days": 30
+  },
+  "standard": {
+    "name": "Стандарт",
+    "price": 990,
+    "requests": 100,
+    "docs": 50,
+    "days": 30
+  },
+  "pro": {
+    "name": "Про",
+    "price": 1990,
+    "requests": 300,
+    "docs": 100,
+    "days": 30
+  },
+  "max": {
+    "name": "Максимум",
+    "price": 4500,
+    "requests": 9999,
+    "docs": 999,
+    "days": 30
+  }
+};
+
 const API = 'https://docshelp-production.up.railway.app';
 let token = localStorage.getItem('dh_web_token');
 let userId = localStorage.getItem('dh_web_uid');
@@ -2925,30 +3296,341 @@ window.addEventListener('load', () => {
   }, 1500);
 });
 
-// ── Auth ──
+// ── Auth + Email Verification ──
+let pendingVerifyEmail = localStorage.getItem('dh_pending_verify_email') || '';
+let pendingVerifyName = '';
+
+function getDemoAccounts() {
+  try { return JSON.parse(localStorage.getItem('dh_demo_accounts') || '{}'); }
+  catch(e) { return {}; }
+}
+
+function saveDemoAccounts(accounts) {
+  localStorage.setItem('dh_demo_accounts', JSON.stringify(accounts));
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function makeEmailCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function setAuthError(message) {
+  const errEl = document.getElementById('auth-err');
+  errEl.textContent = message || '';
+  errEl.style.display = message ? 'block' : 'none';
+}
+
+function setVerifyStatus(message, type) {
+  const el = document.getElementById('verify-status');
+  el.textContent = message || '';
+  el.className = 'verify-status' + (type ? ' ' + type : '');
+}
+
+function showEmailVerify(email, demoCode, message) {
+  pendingVerifyEmail = normalizeEmail(email);
+  localStorage.setItem('dh_pending_verify_email', pendingVerifyEmail);
+
+  const box = document.getElementById('email-verify-box');
+  const desc = document.getElementById('verify-desc');
+  const codeInput = document.getElementById('email-code');
+
+  box.classList.add('active');
+  codeInput.value = '';
+  codeInput.focus();
+
+  if (demoCode) {
+    desc.innerHTML = `Код подтверждения для <b>${pendingVerifyEmail}</b>: <b>${demoCode}</b><br><span style="color:var(--text-secondary)">MVP-режим: сейчас код показан на экране. После подключения backend он будет приходить письмом.</span>`;
+  } else {
+    desc.innerHTML = `Мы отправили код подтверждения на <b>${pendingVerifyEmail}</b>. Введите 6 цифр, чтобы активировать аккаунт.`;
+  }
+
+  setVerifyStatus(message || 'Проверь почту и введи код.', '');
+}
+
+function hideEmailVerify() {
+  document.getElementById('email-verify-box').classList.remove('active');
+  setVerifyStatus('', '');
+}
+
+function cancelEmailVerify() {
+  localStorage.removeItem('dh_pending_verify_email');
+  pendingVerifyEmail = '';
+  hideEmailVerify();
+  setAuthError('Можно изменить email и зарегистрироваться заново.');
+}
+
+function createLocalVerification(email, password) {
+  const code = makeEmailCode();
+  const accounts = getDemoAccounts();
+  accounts[email] = {
+    password,
+    verified: false,
+    verificationCode: code,
+    verificationExpires: Date.now() + 15 * 60 * 1000,
+    createdAt: Date.now(),
+    requests: 0,
+    riskScore: 0
+  };
+  saveDemoAccounts(accounts);
+  return code;
+}
+
+async function requestBackendVerification(email, password) {
+  const resp = await fetch(API + '/auth/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email, password})
+  });
+
+  const data = await resp.json();
+
+  if (!resp.ok || data.error) {
+    return { ok:false, error:data.error || 'Ошибка регистрации' };
+  }
+
+  return { ok:true, data };
+}
+
 function switchTab(tab) {
   isRegister = tab === 'register';
   document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&!isRegister)||(i===1&&isRegister)));
   document.getElementById('auth-submit-btn').textContent = isRegister ? 'Зарегистрироваться' : 'Войти';
-  document.getElementById('auth-err').style.display = 'none';
+  document.getElementById('auth-legal').classList.toggle('active', isRegister);
+  setAuthError('');
+  hideEmailVerify();
 }
 
 async function authSubmit() {
-  const email = document.getElementById('auth-email').value.trim();
+  const email = normalizeEmail(document.getElementById('auth-email').value);
   const password = document.getElementById('auth-password').value;
-  const errEl = document.getElementById('auth-err');
-  errEl.style.display = 'none';
-  if (!email || !password) { errEl.textContent = 'Заполни все поля'; errEl.style.display = 'block'; return; }
-  const endpoint = isRegister ? '/auth/register' : '/auth/login';
+  const legalCheck = document.getElementById('auth-legal-check');
+
+  setAuthError('');
+
+  if (!email || !password) {
+    setAuthError('Заполни email и пароль');
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    setAuthError('Введите корректный email');
+    return;
+  }
+
+  if (password.length < 6) {
+    setAuthError('Пароль должен быть минимум 6 символов');
+    return;
+  }
+
+  if (isRegister && !legalCheck.checked) {
+    setAuthError('Нужно принять соглашение и политику конфиденциальности');
+    return;
+  }
+
+  if (isRegister) {
+    // Backend-ready режим: если backend поддерживает регистрацию с email verification,
+    // он может вернуть {requires_verification:true, email:"..."}.
+    try {
+      const result = await requestBackendVerification(email, password);
+
+      if (result.ok) {
+        const data = result.data;
+
+        if (data.requires_verification || data.email_verification_required) {
+          showEmailVerify(data.email || email, null, 'Код отправлен на почту.');
+          return;
+        }
+
+        if (data.token) {
+          localStorage.setItem('dh_email_verified_' + email, '1');
+          saveSession(data.token, data.user_id || email, email.split('@')[0], true, email);
+          return;
+        }
+      }
+
+      if (!result.ok && !String(result.error || '').toLowerCase().includes('failed to fetch')) {
+        setAuthError(result.error);
+        return;
+      }
+    } catch(e) {
+      // Если backend недоступен, включаем локальный MVP-режим.
+    }
+
+    const accounts = getDemoAccounts();
+    if (accounts[email] && accounts[email].verified) {
+      setAuthError('Такой email уже зарегистрирован. Перейди во вход.');
+      return;
+    }
+
+    const code = createLocalVerification(email, password);
+    showEmailVerify(email, code, 'MVP: код создан локально.');
+    return;
+  }
+
+  // Login: сначала пробуем backend.
   try {
-    const resp = await fetch(API + endpoint, {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
+    const resp = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({email, password})
     });
     const data = await resp.json();
-    if (data.error) { errEl.textContent = data.error; errEl.style.display = 'block'; return; }
-    saveSession(data.token, data.user_id, email.split('@')[0]);
-  } catch(e) { errEl.textContent = 'Ошибка соединения'; errEl.style.display = 'block'; }
+
+    if (data.error === 'email_not_verified' || data.email_verification_required) {
+      pendingVerifyEmail = email;
+      localStorage.setItem('dh_pending_verify_email', email);
+      showEmailVerify(email, null, 'Email ещё не подтверждён. Введите код или запросите новый.');
+      return;
+    }
+
+    if (data.error) {
+      setAuthError(data.error);
+      return;
+    }
+
+    if (data.token) {
+      saveSession(data.token, data.user_id || email, email.split('@')[0], !!data.email_verified, email);
+      return;
+    }
+  } catch(e) {
+    // Если backend недоступен, проверяем демо-аккаунт.
+  }
+
+  const accounts = getDemoAccounts();
+  const acc = accounts[email];
+
+  if (!acc || acc.password !== password) {
+    setAuthError('Неверный email или пароль');
+    return;
+  }
+
+  if (!acc.verified) {
+    showEmailVerify(email, acc.verificationCode, 'Email ещё не подтверждён.');
+    return;
+  }
+
+  saveSession('demo-token-' + email, 'demo-' + email, email.split('@')[0], true, email);
+}
+
+async function verifyEmailCode() {
+  const email = pendingVerifyEmail || normalizeEmail(document.getElementById('auth-email').value);
+  const code = document.getElementById('email-code').value.trim();
+
+  if (!email) {
+    setVerifyStatus('Email не найден. Вернитесь к регистрации.', 'bad');
+    return;
+  }
+
+  if (!/^\d{6}$/.test(code)) {
+    setVerifyStatus('Введите 6 цифр из письма.', 'bad');
+    return;
+  }
+
+  // Backend-ready проверка.
+  try {
+    const resp = await fetch(API + '/auth/verify-email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, code})
+    });
+    const data = await resp.json();
+
+    if (resp.ok && !data.error) {
+      localStorage.setItem('dh_email_verified_' + email, '1');
+      localStorage.removeItem('dh_pending_verify_email');
+
+      if (data.token) {
+        saveSession(data.token, data.user_id || email, email.split('@')[0], true, email);
+      } else {
+        setVerifyStatus('Email подтверждён. Теперь можно войти.', 'ok');
+        hideEmailVerify();
+        switchTab('login');
+      }
+      return;
+    }
+  } catch(e) {
+    // fallback на MVP-режим
+  }
+
+  const accounts = getDemoAccounts();
+  const acc = accounts[email];
+
+  if (!acc) {
+    setVerifyStatus('Аккаунт не найден. Зарегистрируйтесь заново.', 'bad');
+    return;
+  }
+
+  if (Date.now() > acc.verificationExpires) {
+    setVerifyStatus('Код истёк. Нажмите “Отправить код ещё раз”.', 'bad');
+    return;
+  }
+
+  if (acc.verificationCode !== code) {
+    setVerifyStatus('Неверный код.', 'bad');
+    return;
+  }
+
+  acc.verified = true;
+  acc.verificationCode = '';
+  acc.verifiedAt = Date.now();
+  accounts[email] = acc;
+  saveDemoAccounts(accounts);
+
+  localStorage.setItem('dh_email_verified_' + email, '1');
+  localStorage.removeItem('dh_pending_verify_email');
+
+  setVerifyStatus('Email подтверждён. Входим...', 'ok');
+
+  setTimeout(() => {
+    saveSession('demo-token-' + email, 'demo-' + email, email.split('@')[0], true, email);
+  }, 500);
+}
+
+async function resendEmailCode() {
+  const email = pendingVerifyEmail || normalizeEmail(document.getElementById('auth-email').value);
+  if (!email) {
+    setVerifyStatus('Введите email заново.', 'bad');
+    return;
+  }
+
+  // Backend-ready повторная отправка.
+  try {
+    const resp = await fetch(API + '/auth/resend-email-code', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email})
+    });
+    const data = await resp.json();
+    if (resp.ok && !data.error) {
+      showEmailVerify(email, null, 'Новый код отправлен на почту.');
+      return;
+    }
+  } catch(e) {
+    // fallback
+  }
+
+  const accounts = getDemoAccounts();
+  const acc = accounts[email];
+
+  if (!acc) {
+    setVerifyStatus('Аккаунт не найден. Зарегистрируйтесь заново.', 'bad');
+    return;
+  }
+
+  const code = makeEmailCode();
+  acc.verificationCode = code;
+  acc.verificationExpires = Date.now() + 15 * 60 * 1000;
+  accounts[email] = acc;
+  saveDemoAccounts(accounts);
+
+  showEmailVerify(email, code, 'MVP: создан новый код.');
 }
 
 async function onTelegramAuth(user) {
@@ -2959,15 +3641,17 @@ async function onTelegramAuth(user) {
     });
     const data = await resp.json();
     if (data.error) { alert(data.error); return; }
-    saveSession(data.token, data.user_id, data.name || user.username || user.first_name);
+    saveSession(data.token, data.user_id, data.name || user.username || user.first_name, true, user.username || user.first_name);
   } catch(e) { alert('Ошибка авторизации'); }
 }
 
-function saveSession(t, uid, name) {
+function saveSession(t, uid, name, emailVerified = false, email = '') {
   token = t; userId = uid;
   localStorage.setItem('dh_web_token', t);
   localStorage.setItem('dh_web_uid', uid);
   localStorage.setItem('dh_web_name', name);
+  if (email) localStorage.setItem('dh_web_email', email);
+  localStorage.setItem('dh_email_verified_current', emailVerified ? '1' : '0');
   initApp(name);
 }
 
@@ -2975,10 +3659,14 @@ function logout() {
   localStorage.removeItem('dh_web_token');
   localStorage.removeItem('dh_web_uid');
   localStorage.removeItem('dh_web_name');
+  localStorage.removeItem('dh_web_email');
+  localStorage.removeItem('dh_email_verified_current');
   token = null; userId = null;
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  hideEmailVerify();
 }
+
 
 // ── App ──
 async function initApp(name) {
@@ -2986,8 +3674,10 @@ async function initApp(name) {
   document.getElementById('app').style.display = 'flex';
   const n = name || localStorage.getItem('dh_web_name') || 'Пользователь';
   document.getElementById('user-avatar').textContent = n[0].toUpperCase();
-  document.getElementById('user-name').textContent = n;
-  document.getElementById('user-plan').textContent = 'Загрузка...';
+  const currentEmail = localStorage.getItem('dh_web_email') || '';
+  const verified = localStorage.getItem('dh_email_verified_current') === '1';
+  document.getElementById('user-name').textContent = n + (verified ? ' ✅' : '');
+  document.getElementById('user-plan').textContent = verified ? 'Email подтверждён' : 'Email не подтверждён';
   try {
     const resp = await fetch(API + '/auth/me', {headers: {'Authorization': 'Bearer ' + token}});
     const data = await resp.json();
@@ -3258,6 +3948,7 @@ function clearFormulaPad() {
 }
 
 function showSection(name) {
+  if(name === 'admin') setTimeout(renderAdminPanel, 50);
   ['chat','files','docs','engineer','excel','raffle','sub'].forEach(s => {
     const el = document.getElementById('section-'+s);
     if(el) el.style.display = s === name ? 'flex' : 'none';
@@ -3790,6 +4481,8 @@ function formatRaffleNumber(n){
 }
 
 function isRaffleLocked(){
+  const manualSub = getManualPlanForCurrentUser();
+  if(manualSub){localStorage.setItem('dh_web_plan', manualSub.plan); localStorage.setItem('dh_web_plan_expires', String(manualSub.expiresAt)); return false;}
   return getRafflePlanInfo().locked;
 }
 
