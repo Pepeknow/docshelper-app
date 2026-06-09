@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DocsHelper — Веб</title>
 <script src="https://telegram.org/js/telegram-widget.js?22" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://unpkg.com/mathlive"></script>
 <style>
 /* ── Variables ── */
@@ -1867,6 +1868,86 @@ body{
   .engineering-hero h2{font-size:22px;}
 }
 
+
+
+/* ── Document Tools Lab ── */
+.docs-hero{
+  background:linear-gradient(135deg,rgba(99,102,241,0.14),rgba(129,140,248,0.08));
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:22px;
+  margin-bottom:18px;
+  position:relative;
+  overflow:hidden;
+}
+.docs-hero::after{
+  content:'';
+  position:absolute;
+  width:160px;
+  height:160px;
+  right:-50px;
+  top:-60px;
+  background:radial-gradient(circle,rgba(99,102,241,0.25),transparent 70%);
+}
+.docs-kicker{font-size:12px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.docs-hero h2{font-size:26px;line-height:1.2;margin-bottom:8px;color:var(--text-primary);}
+.docs-hero p{font-size:14px;line-height:1.7;color:var(--text-secondary);max-width:680px;}
+.doc-tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.doc-tool-card{
+  background:var(--bg-primary);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  text-align:left;
+  cursor:pointer;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  color:var(--text-primary);
+  transition:all .25s;
+}
+.doc-tool-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 14px 28px rgba(99,102,241,.14);}
+.doc-tool-icon{width:42px;height:42px;border-radius:15px;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.doc-tool-title{font-size:14px;font-weight:800;margin-bottom:4px;color:var(--text-primary);}
+.doc-tool-desc{font-size:12px;line-height:1.45;color:var(--text-secondary);}
+.doc-workspace{background:var(--bg-primary);border:1px solid var(--border);border-radius:22px;padding:18px;margin-bottom:18px;}
+.doc-workspace-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;}
+.doc-workspace-head h3{font-size:18px;margin-bottom:4px;color:var(--text-primary);}
+.doc-workspace-head p{font-size:13px;color:var(--text-secondary);line-height:1.5;}
+.doc-badge{font-size:11px;font-weight:800;color:white;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:999px;padding:6px 10px;white-space:nowrap;}
+.doc-textarea{width:100%;min-height:180px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);border-radius:16px;padding:14px;font-size:14px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;}
+.doc-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12);}
+.doc-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.doc-action-btn{border:none;border-radius:14px;padding:11px 14px;font-size:13px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white;transition:all .2s;}
+.doc-action-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(99,102,241,.22);}
+.doc-secondary-btn{background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);}
+.doc-file-zone{border:2px dashed var(--border);border-radius:18px;padding:18px;text-align:center;background:var(--bg-secondary);margin-top:14px;transition:all .2s;}
+.doc-file-zone:hover{border-color:var(--accent);}
+.doc-file-zone input{display:none;}
+.doc-file-zone-title{font-size:15px;font-weight:800;margin-bottom:6px;color:var(--text-primary);}
+.doc-file-zone-desc{font-size:13px;color:var(--text-secondary);margin-bottom:12px;}
+.doc-file-pick{display:inline-flex;align-items:center;gap:8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;color:var(--text-primary);cursor:pointer;}
+.doc-file-list{margin-top:10px;font-size:13px;color:var(--text-secondary);text-align:left;}
+.doc-output{background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:12px;margin-top:12px;font-size:13px;color:var(--text-secondary);line-height:1.6;white-space:pre-wrap;}
+.doc-output strong{color:var(--text-primary);}
+.doc-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.doc-mini-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:18px;padding:16px;}
+.doc-mini-card h4{font-size:14px;margin-bottom:6px;color:var(--text-primary);}
+.doc-mini-card p{font-size:12px;line-height:1.5;color:var(--text-secondary);}
+@media(max-width:900px){.doc-tools-grid,.doc-mini-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  .docs-hero{border-radius:20px;padding:18px;background:rgba(255,255,255,.58);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+  .docs-hero h2{font-size:22px;}
+  .doc-tools-grid,.doc-mini-grid{grid-template-columns:1fr;}
+  .doc-tool-card,.doc-workspace,.doc-mini-card{border-radius:20px;background:rgba(255,255,255,.58);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+  .doc-workspace-head{flex-direction:column;}
+  .doc-badge{align-self:flex-start;}
+  .doc-textarea{min-height:170px;font-size:16px;}
+  .doc-actions{display:grid;grid-template-columns:1fr 1fr;}
+  .doc-action-btn{width:100%;padding:13px 10px;}
+}
+@media(max-width:420px){.doc-actions{grid-template-columns:1fr;}.docs-hero h2{font-size:21px;}}
+
 </style>
 </head>
 <body>
@@ -2001,8 +2082,88 @@ body{
 
     <div id="section-docs" style="display:none;flex:1;overflow-y:auto;">
       <div>
-        <div class="section-title">История документов</div>
-        <div id="doc-list" style="color:var(--text-secondary);font-size:14px;text-align:center;padding:40px;">Загрузка...</div>
+        <div class="docs-hero">
+          <div class="docs-kicker">Document Lab</div>
+          <h2>📄 Документы и конвертеры</h2>
+          <p>Здесь можно быстро подготовить текст к PDF, скачать TXT, отправить текст на улучшение, выбрать файлы для конвертации и собрать задачу для backend-обработки.</p>
+        </div>
+
+        <div class="doc-tools-grid">
+          <button class="doc-tool-card" onclick="focusDocTool('text-pdf')">
+            <div class="doc-tool-icon">📝</div>
+            <div><div class="doc-tool-title">Текст → PDF</div><div class="doc-tool-desc">Вставь текст, нажми кнопку и сохрани через печать в PDF</div></div>
+          </button>
+          <button class="doc-tool-card" onclick="focusDocTool('file-pdf')">
+            <div class="doc-tool-icon">🖼️</div>
+            <div><div class="doc-tool-title">Файл → PDF</div><div class="doc-tool-desc">Картинки можно собрать в PDF, DOCX/PDF подключим через backend</div></div>
+          </button>
+          <button class="doc-tool-card" onclick="focusDocTool('pdf-text')">
+            <div class="doc-tool-icon">🔎</div>
+            <div><div class="doc-tool-title">PDF → текст</div><div class="doc-tool-desc">Подготовка к извлечению текста и отправке в чат</div></div>
+          </button>
+          <button class="doc-tool-card" onclick="focusDocTool('rewrite')">
+            <div class="doc-tool-icon">✍️</div>
+            <div><div class="doc-tool-title">Улучшить текст</div><div class="doc-tool-desc">Переписать, сократить, сделать официально или оригинально</div></div>
+          </button>
+          <button class="doc-tool-card" onclick="focusDocTool('compress')">
+            <div class="doc-tool-icon">🗜️</div>
+            <div><div class="doc-tool-title">Сжать PDF</div><div class="doc-tool-desc">Кнопка готова, обработку добавим на Python/backend</div></div>
+          </button>
+          <button class="doc-tool-card" onclick="focusDocTool('merge')">
+            <div class="doc-tool-icon">🧩</div>
+            <div><div class="doc-tool-title">Объединить PDF</div><div class="doc-tool-desc">Выбери несколько PDF и отправь задачу на обработку</div></div>
+          </button>
+        </div>
+
+        <div class="doc-workspace" id="doc-workspace">
+          <div class="doc-workspace-head">
+            <div>
+              <h3>⚡ Быстрый редактор документов</h3>
+              <p>Вставь текст или выбери файл. Часть функций работает прямо в браузере, сложные конвертации потом подключаются через backend.</p>
+            </div>
+            <div class="doc-badge">DocsHelper Tools</div>
+          </div>
+
+          <textarea id="documentTextInput" class="doc-textarea" placeholder="Вставь текст сюда. Например: договор, заявление, конспект, расчёт, описание проекта...
+
+Потом нажми: Текст → PDF, Скачать TXT, Улучшить, Сократить или Сделать официально."></textarea>
+
+          <div class="doc-actions">
+            <button class="doc-action-btn" onclick="textToPdfPrint()">📝 Текст → PDF</button>
+            <button class="doc-action-btn" onclick="downloadTextFile()">⬇️ Скачать TXT</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="sendDocumentPrompt('rewrite')">✍️ Улучшить</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="sendDocumentPrompt('shorten')">✂️ Сократить</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="sendDocumentPrompt('official')">🏛 Официально</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="clearDocumentTools()">🗑 Очистить</button>
+          </div>
+
+          <div class="doc-file-zone">
+            <div class="doc-file-zone-title">📎 Конвертер файлов</div>
+            <div class="doc-file-zone-desc">Выбери PDF, DOCX, TXT, PNG, JPG. Картинки можно собрать в PDF прямо здесь.</div>
+            <input type="file" id="docConverterFiles" multiple accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.webp" onchange="handleDocFiles()">
+            <label class="doc-file-pick" for="docConverterFiles">📂 Выбрать файлы</label>
+            <div id="docFileList" class="doc-file-list">Файлы пока не выбраны.</div>
+          </div>
+
+          <div class="doc-actions">
+            <button class="doc-action-btn" onclick="imagesToPdf()">🖼️ Картинки → PDF</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="requestBackendConvert('pdf_text')">🔎 PDF → текст</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="requestBackendConvert('docx_pdf')">📄 DOCX → PDF</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="requestBackendConvert('compress_pdf')">🗜️ Сжать PDF</button>
+            <button class="doc-action-btn doc-secondary-btn" onclick="requestBackendConvert('merge_pdf')">🧩 Объединить PDF</button>
+          </div>
+
+          <div id="docToolsOutput" class="doc-output"><strong>Статус:</strong> готово. Выбери действие выше.</div>
+        </div>
+
+        <div class="doc-mini-grid">
+          <div class="doc-mini-card"><h4>✅ Что работает сразу</h4><p>Текст → PDF через печать браузера, TXT-файл, улучшение текста через чат, картинки → PDF.</p></div>
+          <div class="doc-mini-card"><h4>🧠 Через AI</h4><p>Переписать текст, сделать официально, сократить, объяснить документ или подготовить структуру.</p></div>
+          <div class="doc-mini-card"><h4>⚙️ Backend позже</h4><p>DOCX → PDF, сжатие PDF, объединение PDF и PDF → текст лучше делать на Python-сервере.</p></div>
+        </div>
+
+        <div class="section-title" style="margin-top:24px;">История документов</div>
+        <div id="doc-list" style="color:var(--text-secondary);font-size:14px;text-align:center;padding:24px;">Загрузка...</div>
       </div>
     </div>
 
@@ -2508,6 +2669,144 @@ if (token && userId) {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
+
+
+// ── Document Tools ──
+let selectedDocFiles = [];
+
+function setDocOutput(message) {
+  const el = document.getElementById('docToolsOutput');
+  if (el) el.innerHTML = message;
+}
+
+function getDocumentText() {
+  const el = document.getElementById('documentTextInput');
+  return el ? el.value.trim() : '';
+}
+
+function focusDocTool(type) {
+  const workspace = document.getElementById('doc-workspace');
+  if (workspace) workspace.scrollIntoView({behavior:'smooth', block:'start'});
+  const input = document.getElementById('documentTextInput');
+  const messages = {
+    'text-pdf': '<strong>Текст → PDF:</strong> вставь текст в поле и нажми “Текст → PDF”. Откроется окно печати, там выбери “Сохранить как PDF”.',
+    'file-pdf': '<strong>Файл → PDF:</strong> выбери изображения PNG/JPG/WEBP и нажми “Картинки → PDF”. DOCX → PDF добавим через backend.',
+    'pdf-text': '<strong>PDF → текст:</strong> выбери PDF и нажми “PDF → текст”. Для реального извлечения текста нужен backend/Python.',
+    'rewrite': '<strong>Улучшить текст:</strong> вставь текст и нажми “Улучшить”, “Сократить” или “Официально”.',
+    'compress': '<strong>Сжать PDF:</strong> выбери PDF и нажми “Сжать PDF”. Обработку подключим через backend.',
+    'merge': '<strong>Объединить PDF:</strong> выбери несколько PDF и нажми “Объединить PDF”. Обработку подключим через backend.'
+  };
+  setDocOutput(messages[type] || '<strong>Статус:</strong> выбери действие.');
+  if (input && ['text-pdf','rewrite'].includes(type)) input.focus();
+}
+
+function textToPdfPrint() {
+  const text = getDocumentText();
+  if (!text) { alert('Вставь текст для PDF'); return; }
+  const safeText = text.replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+  const w = window.open('', '_blank');
+  if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
+  w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.close();
+  setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
+}
+
+function downloadTextFile() {
+  const text = getDocumentText();
+  if (!text) { alert('Вставь текст для скачивания'); return; }
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'docshelper-text.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setDocOutput('<strong>Готово:</strong> TXT-файл скачан.');
+}
+
+function sendDocumentPrompt(type) {
+  const text = getDocumentText();
+  if (!text) { alert('Вставь текст'); return; }
+  const prompts = {
+    rewrite: `Перепиши этот текст лучше, понятнее и грамотнее:\n\n${text}`,
+    shorten: `Сократи этот текст, сохрани смысл и сделай его аккуратным:\n\n${text}`,
+    official: `Сделай этот текст официальным деловым стилем:\n\n${text}`
+  };
+  quickMsg(prompts[type] || text);
+}
+
+function handleDocFiles() {
+  const input = document.getElementById('docConverterFiles');
+  selectedDocFiles = input ? Array.from(input.files || []) : [];
+  const list = document.getElementById('docFileList');
+  if (!selectedDocFiles.length) {
+    if (list) list.textContent = 'Файлы пока не выбраны.';
+    return;
+  }
+  if (list) {
+    list.innerHTML = selectedDocFiles.map((f,i)=>`${i+1}. ${f.name} — ${(f.size/1024/1024).toFixed(2)} MB`).join('<br>');
+  }
+  setDocOutput(`<strong>Выбрано файлов:</strong> ${selectedDocFiles.length}. Теперь выбери действие: картинки → PDF, PDF → текст, DOCX → PDF, сжатие или объединение.`);
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function imagesToPdf() {
+  const images = selectedDocFiles.filter(f => /^image\//.test(f.type));
+  if (!images.length) { alert('Выбери PNG/JPG/WEBP изображения'); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) { alert('Библиотека PDF ещё не загрузилась. Попробуй через пару секунд.'); return; }
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+  const pageW = 210, pageH = 297, margin = 12;
+  for (let i=0; i<images.length; i++) {
+    if (i > 0) pdf.addPage();
+    const dataUrl = await readFileAsDataURL(images[i]);
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = dataUrl; });
+    const ratio = Math.min((pageW - margin*2) / img.width, (pageH - margin*2) / img.height);
+    const w = img.width * ratio;
+    const h = img.height * ratio;
+    const x = (pageW - w) / 2;
+    const y = (pageH - h) / 2;
+    pdf.addImage(dataUrl, 'JPEG', x, y, w, h);
+  }
+  pdf.save('docshelper-images.pdf');
+  setDocOutput(`<strong>Готово:</strong> создан PDF из изображений: ${images.length} шт.`);
+}
+
+function requestBackendConvert(type) {
+  if (!selectedDocFiles.length) { alert('Сначала выбери файл'); return; }
+  const names = selectedDocFiles.map(f => f.name).join(', ');
+  const labels = {
+    pdf_text: 'PDF → текст',
+    docx_pdf: 'DOCX → PDF',
+    compress_pdf: 'Сжать PDF',
+    merge_pdf: 'Объединить PDF'
+  };
+  setDocOutput(`<strong>${labels[type] || 'Конвертация'}:</strong> файлы выбраны: ${names}. Для реальной обработки этой функции нужен backend endpoint. Интерфейс уже готов.`);
+  quickMsg(`Подготовь инструкцию для backend/Python функции “${labels[type] || type}” для файлов: ${names}. Нужно объяснить, какие библиотеки использовать и какой endpoint добавить.`);
+}
+
+function clearDocumentTools() {
+  const text = document.getElementById('documentTextInput');
+  const files = document.getElementById('docConverterFiles');
+  const list = document.getElementById('docFileList');
+  if (text) text.value = '';
+  if (files) files.value = '';
+  selectedDocFiles = [];
+  if (list) list.textContent = 'Файлы пока не выбраны.';
+  setDocOutput('<strong>Статус:</strong> очищено.');
+}
+
 </script>
 </body>
 </html>
