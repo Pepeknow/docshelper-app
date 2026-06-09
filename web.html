@@ -795,8 +795,8 @@ body{color:var(--text-primary);background:var(--bg-secondary);min-height:100vh;o
 .section-title{font-size:22px;font-weight:700;margin-bottom:20px;color:var(--text-primary);}
 
 .section-card{
-  background:white;
-  border:1px solid #e5e7eb;
+  background:var(--bg-primary);
+  border:1px solid var(--border);
   border-radius:12px;
   padding:20px;
   margin-bottom:16px;
@@ -812,8 +812,8 @@ body{color:var(--text-primary);background:var(--bg-secondary);min-height:100vh;o
 .plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 .plan-card{
-  background:white;
-  border:1px solid #e5e7eb;
+  background:var(--bg-primary);
+  border:1px solid var(--border);
   border-radius:12px;
   padding:16px;
   cursor:pointer;
@@ -893,6 +893,375 @@ body{color:var(--text-primary);background:var(--bg-secondary);min-height:100vh;o
   width:100%;
   height:100%;
   object-fit:contain;
+}
+
+
+
+
+/* ── Responsive fix: split screen + mobile ── */
+html, body{
+  width:100%;
+  max-width:100%;
+}
+
+body{
+  overflow:hidden;
+}
+
+#app{
+  width:100%;
+  min-width:0;
+  height:100dvh;
+}
+
+.main,
+#section-chat{
+  min-width:0;
+  min-height:0;
+}
+
+.chat-area{
+  min-height:0;
+}
+
+.auth-box{
+  margin:16px;
+}
+
+/* Узкий экран на ПК / split-screen */
+@media(max-width:900px){
+  #app{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+    max-height:230px;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+  }
+
+  .sidebar-header{
+    padding:12px 14px;
+  }
+
+  .sidebar-logo{
+    margin-bottom:10px;
+  }
+
+  .style-picker{
+    margin:8px 14px;
+  }
+
+  .new-chat-btn{
+    margin:8px 14px;
+    width:calc(100% - 28px);
+  }
+
+  .chat-list{
+    display:flex;
+    flex-direction:row;
+    gap:8px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    max-height:58px;
+    padding:8px 14px;
+  }
+
+  .chat-item{
+    min-width:150px;
+    margin-bottom:0;
+  }
+
+  .sidebar-nav{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:8px 14px 12px;
+  }
+
+  .nav-link{
+    flex-shrink:0;
+    margin-bottom:0;
+    white-space:nowrap;
+  }
+
+  .main{
+    flex:1;
+    min-height:0;
+  }
+
+  .main-header{
+    padding:12px 14px;
+    gap:10px;
+  }
+
+  .main-title{
+    font-size:16px;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .model-select{
+    max-width:48vw;
+  }
+
+  .chat-area{
+    padding:16px 12px;
+  }
+
+  .input-area{
+    padding:12px;
+  }
+}
+
+/* Телефон */
+@media(max-width:600px){
+  body{
+    overflow:hidden;
+  }
+
+  #auth-screen{
+    padding:12px;
+    align-items:flex-start;
+    overflow-y:auto;
+  }
+
+  .auth-box{
+    max-width:100%;
+    width:100%;
+    padding:24px 18px;
+    border-radius:18px;
+    margin:12px 0;
+  }
+
+  .auth-logo{
+    gap:12px;
+    margin-bottom:22px;
+  }
+
+  .auth-logo-icon{
+    width:54px;
+    height:54px;
+    border-radius:14px;
+  }
+
+  .auth-logo-name{
+    font-size:24px;
+  }
+
+  .auth-tabs{
+    margin-bottom:22px;
+  }
+
+  .auth-input,
+  .auth-btn{
+    font-size:16px;
+  }
+
+  .dvd-logo{
+    width:120px;
+    height:120px;
+    opacity:0.06;
+  }
+
+  .sidebar{
+    max-height:170px;
+  }
+
+  .sidebar-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+  }
+
+  .sidebar-logo{
+    margin-bottom:0;
+    min-width:0;
+  }
+
+  .sidebar-logo-icon{
+    width:32px;
+    height:32px;
+  }
+
+  .sidebar-logo-name{
+    font-size:16px;
+  }
+
+  .user-badge{
+    padding:6px 8px;
+    max-width:145px;
+  }
+
+  .user-badge-avatar{
+    width:26px;
+    height:26px;
+    font-size:11px;
+  }
+
+  .user-badge-plan{
+    display:none;
+  }
+
+  .sidebar-section,
+  .style-picker{
+    display:none;
+  }
+
+  .new-chat-btn{
+    margin:8px 12px;
+    width:calc(100% - 24px);
+    padding:10px;
+  }
+
+  .chat-list{
+    display:none;
+  }
+
+  .sidebar-nav{
+    padding:0 12px 10px;
+  }
+
+  .nav-link{
+    padding:8px 10px;
+    font-size:13px;
+  }
+
+  .nav-link-icon{
+    font-size:16px;
+  }
+
+  .main-header{
+    padding:10px 12px;
+    flex-wrap:wrap;
+  }
+
+  .main-title{
+    flex-basis:100%;
+  }
+
+  .model-select{
+    width:100%;
+    max-width:100%;
+    font-size:13px;
+  }
+
+  .chat-area{
+    padding:14px 10px;
+    gap:12px;
+  }
+
+  .welcome{
+    padding:32px 10px;
+  }
+
+  .welcome-icon{
+    font-size:46px;
+    margin-bottom:14px;
+  }
+
+  .welcome-title{
+    font-size:22px;
+  }
+
+  .welcome-sub{
+    font-size:14px;
+    margin-bottom:22px;
+  }
+
+  .quick-btns{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .quick-btn{
+    padding:14px;
+  }
+
+  .msg-row{
+    gap:8px;
+  }
+
+  .msg-avatar{
+    width:30px;
+    height:30px;
+    font-size:14px;
+  }
+
+  .msg-bubble,
+  .msg-typing-bubble{
+    max-width:calc(100% - 38px);
+    padding:12px 13px;
+    font-size:14px;
+    line-height:1.5;
+  }
+
+  .input-area{
+    padding:10px;
+  }
+
+  .input-wrap{
+    padding:10px;
+    gap:8px;
+  }
+
+  .input-wrap textarea{
+    font-size:16px;
+    max-height:120px;
+  }
+
+  .send-btn{
+    padding:9px 13px;
+    font-size:16px;
+  }
+
+  .input-hint{
+    display:none;
+  }
+
+  #section-files,
+  #section-docs,
+  #section-sub{
+    padding:14px 10px;
+    overflow-y:auto;
+  }
+
+  .section-title{
+    font-size:20px;
+  }
+
+  .section-card{
+    padding:16px;
+  }
+
+  .plan-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* Очень узкий экран */
+@media(max-width:380px){
+  .sidebar{
+    max-height:155px;
+  }
+
+  .sidebar-logo-name{
+    display:none;
+  }
+
+  .user-badge{
+    max-width:120px;
+  }
+
+  .nav-link{
+    font-size:12px;
+    padding:7px 8px;
+  }
 }
 
 </style>
