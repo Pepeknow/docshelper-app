@@ -1948,6 +1948,54 @@ body{
 }
 @media(max-width:420px){.doc-actions{grid-template-columns:1fr;}.docs-hero h2{font-size:21px;}}
 
+
+
+/* ── Smart Excel Lab ── */
+.excel-hero{
+  background:linear-gradient(135deg,rgba(16,185,129,0.16),rgba(99,102,241,0.14));
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:26px;
+  margin-bottom:18px;
+  box-shadow:0 18px 45px rgba(0,0,0,0.06);
+}
+.excel-kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:800;margin-bottom:8px;}
+.excel-hero h2{font-size:28px;margin:0 0 8px;color:var(--text-primary);}
+.excel-hero p{font-size:15px;line-height:1.7;color:var(--text-secondary);max-width:760px;}
+.excel-tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0;}
+.excel-card{border:1px solid var(--border);background:var(--bg-primary);border-radius:18px;padding:16px;cursor:pointer;text-align:left;color:var(--text-primary);display:flex;gap:12px;align-items:flex-start;transition:all .25s;}
+.excel-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 14px 28px rgba(0,0,0,0.08);}
+.excel-icon{width:42px;height:42px;border-radius:14px;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.excel-title{font-size:15px;font-weight:800;margin-bottom:4px;}
+.excel-desc{font-size:12px;color:var(--text-secondary);line-height:1.45;}
+.excel-workspace{background:var(--bg-primary);border:1px solid var(--border);border-radius:24px;padding:18px;box-shadow:0 20px 55px rgba(0,0,0,0.07);}
+.excel-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px;}
+.excel-head h3{font-size:20px;margin:0 0 5px;color:var(--text-primary);}
+.excel-head p{font-size:13px;color:var(--text-secondary);line-height:1.6;}
+.excel-badge{padding:8px 12px;border-radius:999px;background:rgba(16,185,129,0.12);color:#059669;font-size:12px;font-weight:800;white-space:nowrap;}
+.excel-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;}
+.excel-btn{border:none;border-radius:12px;padding:10px 13px;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:white;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s;}
+.excel-btn:hover{transform:translateY(-2px);}
+.excel-btn.secondary{background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);}
+.excel-formula-row{display:flex;gap:10px;align-items:center;background:var(--bg-secondary);border:1px solid var(--border);border-radius:14px;padding:10px;margin:10px 0;}
+.excel-cell-label{min-width:58px;font-size:12px;font-weight:900;color:var(--accent);}
+#excelFormulaInput{flex:1;border:none;background:transparent;outline:none;color:var(--text-primary);font-size:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;}
+.excel-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px;background:var(--bg-secondary);max-height:380px;}
+.smart-excel-table{border-collapse:collapse;width:max-content;min-width:100%;background:var(--bg-primary);}
+.smart-excel-table th,.smart-excel-table td{border:1px solid var(--border);min-width:118px;height:38px;padding:0;}
+.smart-excel-table th{position:sticky;top:0;background:var(--bg-secondary);z-index:2;font-size:12px;color:var(--text-secondary);font-weight:900;text-align:center;}
+.smart-excel-table th.row-head{left:0;z-index:3;min-width:44px;width:44px;}
+.smart-excel-table td.row-num{position:sticky;left:0;background:var(--bg-secondary);z-index:1;min-width:44px;width:44px;text-align:center;font-size:12px;color:var(--text-secondary);font-weight:800;}
+.excel-cell{width:100%;height:38px;border:none;outline:none;background:transparent;color:var(--text-primary);padding:8px;font-size:13px;font-family:inherit;}
+.excel-cell:focus{background:rgba(99,102,241,0.10);box-shadow:inset 0 0 0 2px var(--accent);}
+.excel-output{margin-top:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;padding:14px;color:var(--text-secondary);font-size:13px;line-height:1.6;}
+.excel-paste-box{width:100%;min-height:90px;border:1px solid var(--border);border-radius:16px;background:var(--bg-secondary);color:var(--text-primary);padding:12px;outline:none;font-size:13px;resize:vertical;margin:12px 0;}
+.excel-template-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+.excel-chip{border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);border-radius:999px;padding:8px 11px;font-size:12px;font-weight:750;cursor:pointer;}
+.excel-chip:hover{border-color:var(--accent);color:var(--accent);}
+@media(max-width:900px){.excel-tools-grid{grid-template-columns:1fr 1fr;}.excel-head{flex-direction:column}.excel-badge{white-space:normal}.smart-excel-table th,.smart-excel-table td{min-width:105px}}
+@media(max-width:768px){#section-excel{padding:16px 12px 90px!important}.excel-hero{padding:20px;border-radius:22px}.excel-hero h2{font-size:24px}.excel-tools-grid{grid-template-columns:1fr}.excel-card{border-radius:18px;background:rgba(255,255,255,0.58);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}.excel-workspace{padding:14px;border-radius:22px}.excel-toolbar{display:grid;grid-template-columns:1fr 1fr}.excel-btn{width:100%;padding:12px 10px}.excel-formula-row{align-items:flex-start;flex-direction:column;gap:6px}.smart-excel-table th,.smart-excel-table td{min-width:96px}.excel-cell{font-size:16px}}
+
 </style>
 </head>
 <body>
@@ -2029,6 +2077,7 @@ body{
       <div class="nav-link" id="nav-files" onclick="showSection('files')"><div class="nav-link-icon">📁</div> Файлы</div>
       <div class="nav-link" id="nav-docs" onclick="showSection('docs')"><div class="nav-link-icon">📄</div> Документы</div>
       <div class="nav-link" id="nav-engineer" onclick="showSection('engineer')"><div class="nav-link-icon">📐</div> Инженер</div>
+      <div class="nav-link" id="nav-excel" onclick="showSection('excel')"><div class="nav-link-icon">📊</div> Smart Excel</div>
       <div class="nav-link" id="nav-sub" onclick="showSection('sub')"><div class="nav-link-icon">💎</div> Подписка</div>
     </div>
   </div>
@@ -2252,6 +2301,66 @@ H = 0.15 m"></textarea>
             <h4>📄 PDF-логика</h4>
             <p>Пока формируется текст отчёта, потом можно подключить экспорт в PDF на backend.</p>
           </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="section-excel" style="display:none;flex:1;overflow-y:auto;padding:24px;">
+      <div style="max-width:980px;margin:0 auto;">
+        <div class="excel-hero">
+          <div class="excel-kicker">Smart Excel Lab</div>
+          <h2>📊 Смарт Excel</h2>
+          <p>Мини-таблица внутри DocsHelper: вставляй данные, считай формулы, скачивай CSV, отправляй таблицу на AI-анализ и быстро делай шаблоны бюджета, оценок, сметы или расписания.</p>
+        </div>
+
+        <div class="excel-tools-grid">
+          <button class="excel-card" onclick="loadExcelTemplate('budget')"><div class="excel-icon">💰</div><div><div class="excel-title">Бюджет</div><div class="excel-desc">Доходы, расходы, итог и баланс</div></div></button>
+          <button class="excel-card" onclick="loadExcelTemplate('grades')"><div class="excel-icon">🎓</div><div><div class="excel-title">Оценки</div><div class="excel-desc">Средний балл, предметы, комментарии</div></div></button>
+          <button class="excel-card" onclick="loadExcelTemplate('estimate')"><div class="excel-icon">🏗️</div><div><div class="excel-title">Смета</div><div class="excel-desc">Материалы, количество, цена, сумма</div></div></button>
+          <button class="excel-card" onclick="loadExcelTemplate('schedule')"><div class="excel-icon">🗓️</div><div><div class="excel-title">План работ</div><div class="excel-desc">Задача, срок, статус, ответственный</div></div></button>
+          <button class="excel-card" onclick="smartExcelAI('analyze')"><div class="excel-icon">🧠</div><div><div class="excel-title">AI-анализ</div><div class="excel-desc">Найти выводы, ошибки и закономерности</div></div></button>
+          <button class="excel-card" onclick="smartExcelAI('formula')"><div class="excel-icon">🧮</div><div><div class="excel-title">Помощь с формулой</div><div class="excel-desc">Попросить AI подобрать формулу</div></div></button>
+        </div>
+
+        <div class="excel-workspace">
+          <div class="excel-head">
+            <div>
+              <h3>⚡ Живая таблица</h3>
+              <p>Пиши данные как в Excel. Формулы начинаются с <b>=</b>. Работают простые выражения и функции: <b>SUM</b>, <b>AVG</b>, <b>MIN</b>, <b>MAX</b>, например <b>=SUM(B2:B6)</b>.</p>
+            </div>
+            <div class="excel-badge">Browser spreadsheet</div>
+          </div>
+
+          <div class="excel-template-row">
+            <button class="excel-chip" onclick="loadExcelTemplate('budget')">💰 Бюджет</button>
+            <button class="excel-chip" onclick="loadExcelTemplate('grades')">🎓 Оценки</button>
+            <button class="excel-chip" onclick="loadExcelTemplate('estimate')">🏗️ Смета</button>
+            <button class="excel-chip" onclick="loadExcelTemplate('schedule')">🗓️ План</button>
+            <button class="excel-chip" onclick="clearSmartExcel()">🧹 Очистить</button>
+          </div>
+
+          <textarea id="excelPasteBox" class="excel-paste-box" placeholder="Можно вставить CSV/таблицу из Excel сюда, например:
+Название,Кол-во,Цена,Сумма
+Бетон,2,4500,=B2*C2
+Арматура,15,120,=B3*C3"></textarea>
+
+          <div class="excel-toolbar">
+            <button class="excel-btn" onclick="pasteToSmartExcel()">📥 Вставить в таблицу</button>
+            <button class="excel-btn" onclick="recalculateSmartExcel()">🧮 Пересчитать</button>
+            <button class="excel-btn secondary" onclick="downloadSmartExcelCSV()">⬇️ Скачать CSV</button>
+            <button class="excel-btn secondary" onclick="smartExcelAI('analyze')">🧠 AI-анализ</button>
+            <button class="excel-btn secondary" onclick="smartExcelAI('chart')">📈 Идея графика</button>
+            <button class="excel-btn secondary" onclick="smartExcelAI('clean')">✨ Очистить данные AI</button>
+          </div>
+
+          <div class="excel-formula-row">
+            <div class="excel-cell-label" id="excelSelectedCell">A1</div>
+            <input id="excelFormulaInput" placeholder="Формула или значение выбранной ячейки" onkeydown="handleExcelFormulaKey(event)">
+          </div>
+
+          <div class="excel-table-wrap" id="smartExcelTableWrap"></div>
+          <div id="smartExcelOutput" class="excel-output"><strong>Статус:</strong> таблица готова. Выбери шаблон или вставь свои данные.</div>
         </div>
       </div>
     </div>
@@ -2628,7 +2737,7 @@ function clearFormulaPad() {
 }
 
 function showSection(name) {
-  ['chat','files','docs','engineer','sub'].forEach(s => {
+  ['chat','files','docs','engineer','excel','sub'].forEach(s => {
     const el = document.getElementById('section-'+s);
     if(el) el.style.display = s === name ? 'flex' : 'none';
     const nav = document.getElementById('nav-'+s);
@@ -2806,6 +2915,271 @@ function clearDocumentTools() {
   if (list) list.textContent = 'Файлы пока не выбраны.';
   setDocOutput('<strong>Статус:</strong> очищено.');
 }
+
+
+
+// ── Smart Excel Lab ──
+const EXCEL_ROWS = 12;
+const EXCEL_COLS = 7;
+let smartExcelSelected = { row: 0, col: 0 };
+let smartExcelRaw = Array.from({length: EXCEL_ROWS}, () => Array(EXCEL_COLS).fill(''));
+
+function excelColName(index){
+  let name = '';
+  let n = index + 1;
+  while(n > 0){
+    const r = (n - 1) % 26;
+    name = String.fromCharCode(65 + r) + name;
+    n = Math.floor((n - 1) / 26);
+  }
+  return name;
+}
+
+function excelCellName(row, col){ return `${excelColName(col)}${row + 1}`; }
+
+function excelCellToIndex(name){
+  const m = String(name).trim().toUpperCase().match(/^([A-Z]+)(\d+)$/);
+  if(!m) return null;
+  let col = 0;
+  for(const ch of m[1]) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { row: parseInt(m[2],10) - 1, col: col - 1 };
+}
+
+function initSmartExcel(){
+  const wrap = document.getElementById('smartExcelTableWrap');
+  if(!wrap) return;
+  let html = '<table class="smart-excel-table"><thead><tr><th class="row-head"></th>';
+  for(let c=0;c<EXCEL_COLS;c++) html += `<th>${excelColName(c)}</th>`;
+  html += '</tr></thead><tbody>';
+  for(let r=0;r<EXCEL_ROWS;r++){
+    html += `<tr><td class="row-num">${r+1}</td>`;
+    for(let c=0;c<EXCEL_COLS;c++){
+      html += `<td><input class="excel-cell" id="excel-cell-${r}-${c}" data-row="${r}" data-col="${c}" onfocus="selectSmartExcelCell(${r},${c})" oninput="updateSmartExcelCell(${r},${c},this.value)" onkeydown="handleExcelCellKey(event,${r},${c})"></td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  renderSmartExcel();
+}
+
+function selectSmartExcelCell(row,col){
+  smartExcelSelected = {row,col};
+  const label = document.getElementById('excelSelectedCell');
+  const formula = document.getElementById('excelFormulaInput');
+  if(label) label.textContent = excelCellName(row,col);
+  if(formula) formula.value = smartExcelRaw[row][col] || '';
+}
+
+function updateSmartExcelCell(row,col,value){
+  smartExcelRaw[row][col] = value;
+  const formula = document.getElementById('excelFormulaInput');
+  if(smartExcelSelected.row === row && smartExcelSelected.col === col && formula) formula.value = value;
+}
+
+function handleExcelFormulaKey(event){
+  if(event.key !== 'Enter') return;
+  event.preventDefault();
+  const input = document.getElementById('excelFormulaInput');
+  if(!input) return;
+  const {row,col} = smartExcelSelected;
+  smartExcelRaw[row][col] = input.value;
+  renderSmartExcel();
+  focusSmartExcelCell(row,col);
+}
+
+function handleExcelCellKey(event,row,col){
+  if(event.key === 'Enter'){
+    event.preventDefault();
+    renderSmartExcel();
+    focusSmartExcelCell(Math.min(row+1,EXCEL_ROWS-1), col);
+  }
+}
+
+function focusSmartExcelCell(row,col){
+  const el = document.getElementById(`excel-cell-${row}-${col}`);
+  if(el){ el.focus(); el.select(); }
+}
+
+function getSmartExcelValue(row,col,visited=new Set()){
+  if(row < 0 || row >= EXCEL_ROWS || col < 0 || col >= EXCEL_COLS) return '';
+  const key = `${row}:${col}`;
+  const raw = smartExcelRaw[row][col];
+  if(typeof raw !== 'string') return raw;
+  if(!raw.trim().startsWith('=')) return raw;
+  if(visited.has(key)) return '#LOOP';
+  visited.add(key);
+  return evaluateSmartExcelFormula(raw.trim().slice(1), visited);
+}
+
+function getRangeValues(range, visited){
+  const parts = range.split(':').map(excelCellToIndex);
+  if(parts.length !== 2 || !parts[0] || !parts[1]) return [];
+  const r1 = Math.min(parts[0].row, parts[1].row), r2 = Math.max(parts[0].row, parts[1].row);
+  const c1 = Math.min(parts[0].col, parts[1].col), c2 = Math.max(parts[0].col, parts[1].col);
+  const vals=[];
+  for(let r=r1;r<=r2;r++) for(let c=c1;c<=c2;c++) vals.push(parseFloat(getSmartExcelValue(r,c,new Set(visited))) || 0);
+  return vals;
+}
+
+function evaluateSmartExcelFormula(expr, visited){
+  try{
+    let safe = expr.toUpperCase();
+    safe = safe.replace(/(SUM|AVG|MIN|MAX)\(([A-Z]+\d+:[A-Z]+\d+)\)/g, (m, fn, range) => {
+      const vals = getRangeValues(range, visited);
+      if(!vals.length) return '0';
+      if(fn === 'SUM') return String(vals.reduce((a,b)=>a+b,0));
+      if(fn === 'AVG') return String(vals.reduce((a,b)=>a+b,0)/vals.length);
+      if(fn === 'MIN') return String(Math.min(...vals));
+      if(fn === 'MAX') return String(Math.max(...vals));
+      return '0';
+    });
+    safe = safe.replace(/\b([A-Z]+\d+)\b/g, (m) => {
+      const idx = excelCellToIndex(m);
+      if(!idx) return '0';
+      const val = parseFloat(getSmartExcelValue(idx.row, idx.col, new Set(visited)));
+      return Number.isFinite(val) ? String(val) : '0';
+    });
+    if(!/^[0-9+\-*/().,\s]+$/.test(safe)) return '#ERR';
+    const result = Function(`"use strict"; return (${safe.replace(/,/g,'.')});`)();
+    return Number.isFinite(result) ? Math.round(result * 1000000) / 1000000 : '#ERR';
+  }catch(e){ return '#ERR'; }
+}
+
+function renderSmartExcel(){
+  for(let r=0;r<EXCEL_ROWS;r++){
+    for(let c=0;c<EXCEL_COLS;c++){
+      const el = document.getElementById(`excel-cell-${r}-${c}`);
+      if(!el) continue;
+      const raw = smartExcelRaw[r][c] || '';
+      if(document.activeElement === el){ el.value = raw; }
+      else { el.value = String(raw).trim().startsWith('=') ? getSmartExcelValue(r,c) : raw; }
+      el.title = raw;
+    }
+  }
+  setSmartExcelOutput('<strong>Статус:</strong> таблица пересчитана. Формулы хранятся внутри ячеек, результат показывается после пересчёта.');
+}
+
+function recalculateSmartExcel(){ renderSmartExcel(); }
+
+function parseCSVLine(line){
+  const result=[]; let current=''; let quote=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch === '"'){ quote=!quote; continue; }
+    if((ch === ',' || ch === ';' || ch === '\t') && !quote){ result.push(current.trim()); current=''; continue; }
+    current += ch;
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function pasteToSmartExcel(){
+  const box = document.getElementById('excelPasteBox');
+  const text = box ? box.value.trim() : '';
+  if(!text){ alert('Вставь CSV/таблицу в поле выше'); return; }
+  const rows = text.split(/\r?\n/).map(parseCSVLine);
+  clearSmartExcel(false);
+  rows.slice(0,EXCEL_ROWS).forEach((row,r)=> row.slice(0,EXCEL_COLS).forEach((v,c)=> smartExcelRaw[r][c]=v));
+  renderSmartExcel();
+  setSmartExcelOutput(`<strong>Готово:</strong> вставлено строк: ${rows.length}.`);
+}
+
+function setSmartExcelOutput(message){
+  const el = document.getElementById('smartExcelOutput');
+  if(el) el.innerHTML = message;
+}
+
+function clearSmartExcel(show=true){
+  smartExcelRaw = Array.from({length: EXCEL_ROWS}, () => Array(EXCEL_COLS).fill(''));
+  renderSmartExcel();
+  const box = document.getElementById('excelPasteBox');
+  if(box) box.value = '';
+  if(show) setSmartExcelOutput('<strong>Статус:</strong> таблица очищена.');
+}
+
+function loadExcelTemplate(type){
+  clearSmartExcel(false);
+  const templates = {
+    budget: [
+      ['Категория','План','Факт','Разница','Комментарий'],
+      ['Доход','50000','52000','=C2-B2',''],
+      ['Аренда','15000','15000','=C3-B3',''],
+      ['Еда','12000','13500','=C4-B4',''],
+      ['Транспорт','4000','3800','=C5-B5',''],
+      ['Итого','=SUM(B2:B5)','=SUM(C2:C5)','=C6-B6','']
+    ],
+    grades: [
+      ['Предмет','Оценка 1','Оценка 2','Оценка 3','Средний'],
+      ['Математика','5','4','5','=AVG(B2:D2)'],
+      ['Физика','4','4','5','=AVG(B3:D3)'],
+      ['Информатика','5','5','5','=AVG(B4:D4)'],
+      ['Итог','','','','=AVG(E2:E4)']
+    ],
+    estimate: [
+      ['Материал','Кол-во','Цена','Сумма','Запас 10%'],
+      ['Бетон м³','2','4500','=B2*C2','=D2*1.1'],
+      ['Арматура кг','120','70','=B3*C3','=D3*1.1'],
+      ['Доставка','1','3000','=B4*C4','=D4'],
+      ['Итого','','','=SUM(D2:D4)','=SUM(E2:E4)']
+    ],
+    schedule: [
+      ['Задача','Ответственный','Срок','Статус','Комментарий'],
+      ['Подготовить документ','Я','Сегодня','В работе',''],
+      ['Проверить расчёт','Я','Завтра','План',''],
+      ['Сдать проект','Я','Пятница','План','']
+    ]
+  };
+  const data = templates[type] || templates.budget;
+  data.forEach((row,r)=> row.forEach((v,c)=> { if(r<EXCEL_ROWS && c<EXCEL_COLS) smartExcelRaw[r][c]=v; }));
+  renderSmartExcel();
+  setSmartExcelOutput(`<strong>Шаблон загружен:</strong> ${type}. Можно редактировать и отправлять на AI-анализ.`);
+  const wrap = document.getElementById('smartExcelTableWrap');
+  if(wrap) wrap.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function smartExcelToCSV(useValues=false){
+  const rows=[];
+  for(let r=0;r<EXCEL_ROWS;r++){
+    const row=[];
+    for(let c=0;c<EXCEL_COLS;c++){
+      const val = useValues ? getSmartExcelValue(r,c) : smartExcelRaw[r][c];
+      row.push('"' + String(val ?? '').replace(/"/g,'""') + '"');
+    }
+    if(row.some(v => v !== '""')) rows.push(row.join(','));
+  }
+  return rows.join('\n');
+}
+
+function downloadSmartExcelCSV(){
+  const csv = smartExcelToCSV(false);
+  if(!csv.trim()){ alert('Таблица пустая'); return; }
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'docshelper-smart-excel.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setSmartExcelOutput('<strong>Готово:</strong> CSV скачан. Его можно открыть в Excel или Google Sheets.');
+}
+
+function smartExcelAI(type){
+  const raw = smartExcelToCSV(false);
+  const values = smartExcelToCSV(true);
+  if(!raw.trim()){ alert('Сначала заполни таблицу или выбери шаблон'); return; }
+  const prompts = {
+    analyze: `Ты Smart Excel аналитик. Проанализируй таблицу, найди выводы, ошибки, аномалии и предложи улучшения.\n\nИсходная таблица:\n${raw}\n\nЗначения после формул:\n${values}`,
+    chart: `Предложи, какой график лучше построить по этой таблице, какие столбцы взять для X/Y и как назвать график.\n\nТаблица:\n${values}`,
+    clean: `Очисти и нормализуй эту таблицу: исправь названия колонок, убери мусор, предложи правильные формулы и верни улучшенную структуру.\n\nТаблица:\n${raw}`,
+    formula: `Помоги подобрать Excel-формулы для этой таблицы. Объясни, какие формулы вставить и в какие ячейки.\n\nТаблица:\n${raw}`
+  };
+  quickMsg(prompts[type] || prompts.analyze);
+}
+
+setTimeout(initSmartExcel, 300);
 
 </script>
 </body>
