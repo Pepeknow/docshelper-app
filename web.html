@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocsHelper — Owner Button Fix</title>
+<title>DocsHelper — Hidden Owner Entry</title>
 <script src="https://telegram.org/js/telegram-widget.js?22" async>
 // ── Secret Admin MVP ──
 const ADMIN_PASSWORD = 'admin123';
@@ -231,15 +231,23 @@ renderAdminPanel = function(){
 };
 
 
+
+
+
+// ── Hidden owner cabinet trigger ──
+// Ways to open:
+// 1) add #owner to URL and refresh/open
+// 2) press Ctrl + Alt + O
+// 3) type the secret word: militan
+const OWNER_HASH = '#owner';
+const OWNER_SECRET_WORD = 'militan';
+let ownerSecretBuffer = '';
+
 function openOwnerPanel(){
   try{
-    if(typeof showSection === 'function'){
-      showSection('admin');
-    } else {
-      document.querySelectorAll('[id^="section-"]').forEach(el => el.style.display = 'none');
-      const admin = document.getElementById('section-admin');
-      if(admin) admin.style.display = 'block';
-    }
+    document.querySelectorAll('[id^="section-"]').forEach(el => {
+      if(el.id !== 'section-admin') el.style.display = 'none';
+    });
 
     const admin = document.getElementById('section-admin');
     if(admin){
@@ -247,15 +255,67 @@ function openOwnerPanel(){
       admin.scrollIntoView({behavior:'smooth', block:'start'});
     }
 
+    if(typeof showSection === 'function'){
+      try { showSection('admin'); } catch(e) {}
+    }
+
     setTimeout(() => {
+      const admin = document.getElementById('section-admin');
+      if(admin) admin.style.display = 'block';
+
       const pass = document.getElementById('admin-password');
       if(pass) pass.focus();
+
       if(typeof renderAdminPanel === 'function') renderAdminPanel();
     }, 120);
   }catch(e){
     alert('Не удалось открыть кабинет. Обнови страницу через Ctrl+F5.');
   }
 }
+
+function closeOwnerPanel(){
+  const admin = document.getElementById('section-admin');
+  if(admin) admin.style.display = 'none';
+
+  if(location.hash === OWNER_HASH){
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  if(typeof showSection === 'function'){
+    try { showSection('chat'); } catch(e) {}
+  }
+}
+
+window.addEventListener('load', () => {
+  if(location.hash === OWNER_HASH){
+    setTimeout(openOwnerPanel, 600);
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  if(location.hash === OWNER_HASH){
+    openOwnerPanel();
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if(e.ctrlKey && e.altKey && String(e.key).toLowerCase() === 'o'){
+    e.preventDefault();
+    openOwnerPanel();
+    return;
+  }
+
+  if(e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+
+  const key = String(e.key || '').toLowerCase();
+  if(key.length === 1 && /^[a-zа-я0-9]$/i.test(key)){
+    ownerSecretBuffer = (ownerSecretBuffer + key).slice(-OWNER_SECRET_WORD.length);
+    if(ownerSecretBuffer === OWNER_SECRET_WORD){
+      ownerSecretBuffer = '';
+      openOwnerPanel();
+    }
+  }
+});
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -3077,6 +3137,15 @@ body{
   }
 }
 
+
+/* ── Hidden owner entry: no visible admin button ── */
+.owner-floating-entry{
+  display:none !important;
+}
+#section-admin{
+  display:none;
+}
+
 </style>
 </head>
 <body>
@@ -3562,7 +3631,7 @@ H = 0.15 m"></textarea>
           <input class="admin-input" id="admin-password" type="password" placeholder="Пароль">
           <button class="admin-main-btn" onclick="adminLogin()">Войти</button>
           <div class="admin-status" id="admin-login-status"></div>
-          <div class="admin-hint">Тестовый пароль: <b>admin123</b>. Для продакшена перенеси кабинет на backend.</div>
+          <div class="admin-hint">Доступ только для владельца. Для продакшена перенеси кабинет на backend.</div>
         </div>
 
         <div class="admin-panel" id="admin-panel">
@@ -3571,7 +3640,7 @@ H = 0.15 m"></textarea>
               <h3>Кабинет владельца</h3>
               <p>Статистика, email пользователей, DocsCoin и ручная выдача подписок.</p>
             </div>
-            <button class="admin-logout-btn" onclick="adminLogout()">Выйти</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="admin-secondary-btn" onclick="closeOwnerPanel()">Скрыть</button><button class="admin-logout-btn" onclick="adminLogout()">Выйти</button></div>
           </div>
 
           <div class="admin-stats-grid">
@@ -4613,8 +4682,6 @@ function textToPdfPrint() {
   const w = window.open('', '_blank');
   if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
   w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script>
-<button class="owner-floating-entry" id="owner-floating-entry" onclick="openOwnerPanel()" title="Система">⚙️</button>
-
 </body></html>`);
   w.document.close();
   setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
