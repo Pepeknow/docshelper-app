@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocsHelper — Offline Preview Safe</title>
+<title>DocsHelper — Hidden Owner Entry</title>
 <script src="https://telegram.org/js/telegram-widget.js?22" async>
 // ── Secret Admin MVP ──
 const ADMIN_PASSWORD = 'admin123';
@@ -229,6 +229,54 @@ renderAdminPanel = function(){
     renderAdminUsers();
   }
 };
+
+
+// ── Hidden owner cabinet entry ──
+function openOwnerSecret(){
+  const admin = document.getElementById('section-admin');
+  if(!admin) return;
+
+  document.querySelectorAll('[id^="section-"]').forEach(sec => {
+    sec.style.display = 'none';
+    sec.classList.remove('active');
+  });
+
+  admin.classList.remove('owner-hidden');
+  admin.classList.add('owner-visible');
+  admin.style.display = 'block';
+
+  const pass = document.getElementById('admin-password');
+  if(pass) setTimeout(() => pass.focus(), 80);
+
+  if(typeof renderAdminPanel === 'function') {
+    setTimeout(renderAdminPanel, 100);
+  }
+}
+
+function closeOwnerCabinet(){
+  const admin = document.getElementById('section-admin');
+  if(admin){
+    admin.classList.remove('owner-visible');
+    admin.classList.add('owner-hidden');
+    admin.style.display = 'none';
+  }
+  if(typeof showSection === 'function') showSection('chat');
+}
+
+// Hide owner section on normal navigation unless explicitly opened
+const originalShowSectionForOwner = typeof showSection === 'function' ? showSection : null;
+if(originalShowSectionForOwner){
+  showSection = function(section){
+    if(section !== 'admin'){
+      const admin = document.getElementById('section-admin');
+      if(admin){
+        admin.classList.remove('owner-visible');
+        admin.classList.add('owner-hidden');
+      }
+    }
+    return originalShowSectionForOwner(section);
+  }
+}
 
 </script>
 <script defer src="https://unpkg.com/mathlive"></script>
@@ -3024,6 +3072,38 @@ body{
   line-height:1.45;
 }
 
+
+/* ── Hidden owner entry ── */
+.owner-secret-entry{
+  position:fixed;
+  left:8px;
+  bottom:6px;
+  z-index:9999;
+  border:none;
+  background:transparent;
+  color:rgba(100,116,139,.32);
+  font-size:11px;
+  font-weight:700;
+  line-height:1;
+  padding:5px 6px;
+  border-radius:8px;
+  cursor:pointer;
+  opacity:.35;
+}
+.owner-secret-entry:hover{
+  opacity:.85;
+  color:var(--accent);
+  background:rgba(20,184,166,.08);
+}
+#section-admin.owner-hidden{
+  display:none !important;
+}
+#section-admin.owner-visible{
+  display:block !important;
+  flex:1 !important;
+  overflow-y:auto !important;
+}
+
 </style>
 </head>
 <body>
@@ -3496,9 +3576,9 @@ H = 0.15 m"></textarea>
     </div>
 
     
-      <section class="content-section" id="section-admin">
-        <div class="section-title">⚙️ Система</div>
-        <div class="section-subtitle">Закрытый кабинет владельца: статистика, пользователи и ручная выдача подписок.</div>
+      <section class="content-section owner-hidden" id="section-admin">
+        <div class="section-title">⚙️ Панель управления</div>
+        <div class="section-subtitle">Статистика, пользователи и ручная выдача подписок.</div>
 
         <div class="admin-lock-card" id="admin-lock-card">
           <div class="admin-lock-icon">⚙️</div>
@@ -3507,8 +3587,7 @@ H = 0.15 m"></textarea>
           <input class="admin-input" id="admin-password" type="password" placeholder="Пароль">
           <button class="admin-main-btn" onclick="adminLogin()">Войти</button>
           <div class="admin-status" id="admin-login-status"></div>
-          <div class="admin-hint">Тестовый пароль: <b>admin123</b>. Для продакшена перенеси кабинет на backend.</div>
-        </div>
+</div>
 
         <div class="admin-panel" id="admin-panel">
           <div class="admin-top">
@@ -3516,7 +3595,7 @@ H = 0.15 m"></textarea>
               <h3>Кабинет владельца</h3>
               <p>Статистика, email пользователей, DocsCoin и ручная выдача подписок.</p>
             </div>
-            <button class="admin-logout-btn" onclick="adminLogout()">Выйти</button>
+            <button class="admin-logout-btn" onclick="adminLogout();closeOwnerCabinet();">Выйти</button>
           </div>
 
           <div class="admin-stats-grid">
@@ -4556,7 +4635,10 @@ function textToPdfPrint() {
   const safeText = text.replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
   const w = window.open('', '_blank');
   if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
-  w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script>
+  <button class="owner-secret-entry" id="owner-secret-entry" onclick="openOwnerSecret()" title="version">v.</button>
+
+</body></html>`);
   w.document.close();
   setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
 }
