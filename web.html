@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocsHelper — Updated Tariffs</title>
+<title>DocsHelper — Owner Button Fix</title>
 <script src="https://telegram.org/js/telegram-widget.js?22" async>
 // ── Secret Admin MVP ──
 const ADMIN_PASSWORD = 'admin123';
@@ -45,6 +45,216 @@ function selectPlan(planKey){
 
 function getPlanDisplayName(planKey){
   return (window.DOCSHELPER_PLANS && DOCSHELPER_PLANS[planKey] && DOCSHELPER_PLANS[planKey].name) || String(planKey || 'Free');
+}
+
+
+// ── Owner dashboard stats MVP ──
+function getAllDemoUsers(){
+  const accounts = getDemoAccounts ? getDemoAccounts() : {};
+  const users = Object.keys(accounts).map(email => ({
+    id: email,
+    email,
+    verified: !!accounts[email].verified,
+    requests: accounts[email].requests || 0,
+    createdAt: accounts[email].createdAt || Date.now()
+  }));
+
+  const currentEmail = localStorage.getItem('dh_web_email') || '';
+  const currentName = localStorage.getItem('dh_web_name') || '';
+  if(currentEmail && !users.find(u => u.email === currentEmail)){
+    users.push({
+      id: currentEmail,
+      email: currentEmail,
+      verified: localStorage.getItem('dh_email_verified_current') === '1',
+      requests: Number(localStorage.getItem('dh_requests_count') || 0),
+      createdAt: Number(localStorage.getItem('dh_current_created_at') || Date.now())
+    });
+  } else if(currentName && !users.length) {
+    users.push({
+      id: currentName,
+      email: currentName,
+      verified: false,
+      requests: Number(localStorage.getItem('dh_requests_count') || 0),
+      createdAt: Date.now()
+    });
+  }
+
+  return users;
+}
+
+function adminSwitchTab(tab, btn){
+  document.querySelectorAll('.admin-tab-panel').forEach(el => el.style.display = 'none');
+  const panel = document.getElementById('admin-tab-' + tab);
+  if(panel) panel.style.display = 'block';
+
+  document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+
+  if(tab === 'users') renderAdminUsers();
+  if(tab === 'subs') renderAdminSubscriptions();
+  renderOwnerDashboard();
+}
+
+function renderOwnerDashboard(){
+  const users = getAllDemoUsers();
+  const subs = Object.values(getAdminSubscriptions ? getAdminSubscriptions() : {});
+  const activeSubs = subs.filter(s => Number(s.expiresAt) > Date.now());
+  const verified = users.filter(u => u.verified).length;
+  const coins = Number(localStorage.getItem('dh_docscoin_balance') || localStorage.getItem('docscoin_balance') || 0);
+
+  setText('admin-stat-users', users.length);
+  setText('admin-stat-verified', verified);
+  setText('admin-stat-subs', activeSubs.length);
+  setText('admin-stat-coins', compactNumber(coins));
+
+  renderPlanChart(activeSubs);
+}
+
+function setText(id, value){
+  const el = document.getElementById(id);
+  if(el) el.textContent = value;
+}
+
+function compactNumber(n){
+  n = Number(n || 0);
+  if(n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if(n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return String(Math.floor(n));
+}
+
+function renderPlanChart(activeSubs){
+  const canvas = document.getElementById('admin-plan-chart');
+  if(!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  const planNames = {
+    trial:'Пробный',
+    mega:'Мега',
+    base:'Базовый',
+    standard:'Стандарт',
+    pro:'Про',
+    max:'Максимум'
+  };
+  const keys = Object.keys(planNames);
+  const counts = {};
+  keys.forEach(k => counts[k] = 0);
+  activeSubs.forEach(s => { if(counts[s.plan] !== undefined) counts[s.plan]++; });
+
+  const max = Math.max(1, ...keys.map(k => counts[k]));
+  const pad = 34;
+  const gap = 18;
+  const barW = (w - pad*2 - gap*(keys.length-1)) / keys.length;
+
+  ctx.font = '14px system-ui, -apple-system, Segoe UI, sans-serif';
+  ctx.fillStyle = 'rgba(100,116,139,.8)';
+  ctx.fillText('Активные подписки по тарифам', pad, 24);
+
+  keys.forEach((key, i) => {
+    const x = pad + i * (barW + gap);
+    const barH = Math.max(4, (h - 86) * counts[key] / max);
+    const y = h - 48 - barH;
+    const grad = ctx.createLinearGradient(x, y, x+barW, y+barH);
+    grad.addColorStop(0, '#14b8a6');
+    grad.addColorStop(1, '#3b82f6');
+
+    roundRect(ctx, x, y, barW, barH, 12, grad);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '700 15px system-ui, -apple-system, Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(counts[key]), x + barW/2, y - 8);
+
+    ctx.fillStyle = 'rgba(100,116,139,.95)';
+    ctx.font = '12px system-ui, -apple-system, Segoe UI, sans-serif';
+    ctx.fillText(planNames[key], x + barW/2, h - 20);
+    ctx.textAlign = 'left';
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r, fillStyle){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+  ctx.fillStyle = fillStyle;
+  ctx.fill();
+}
+
+function renderAdminUsers(){
+  const body = document.getElementById('admin-users-body');
+  if(!body) return;
+
+  const users = getAllDemoUsers().sort((a,b) => Number(b.createdAt) - Number(a.createdAt));
+
+  if(!users.length){
+    body.innerHTML = `<tr><td colspan="5" style="color:var(--text-secondary)">Пока нет пользователей в этом браузере.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = users.map(u => `
+    <tr>
+      <td><span class="admin-user-pill">📧 ${escapeHtml(u.email)}</span></td>
+      <td style="color:${u.verified ? '#059669' : '#ef4444'};font-weight:800">${u.verified ? 'Подтверждён' : 'Не подтверждён'}</td>
+      <td>${u.requests || 0}</td>
+      <td>${formatAdminDate(u.createdAt)}</td>
+      <td><button class="admin-copy-btn" onclick="copyAdminText('${escapeAttr(u.email)}')">Копировать</button></td>
+    </tr>
+  `).join('');
+}
+
+function copyAdminText(text){
+  navigator.clipboard?.writeText(text);
+}
+
+const oldRenderAdminPanel = typeof renderAdminPanel === 'function' ? renderAdminPanel : null;
+renderAdminPanel = function(){
+  const unlocked = sessionStorage.getItem('dh_admin_unlocked') === '1';
+  const lock = document.getElementById('admin-lock-card');
+  const panel = document.getElementById('admin-panel');
+
+  if(lock && panel){
+    lock.style.display = unlocked ? 'none' : 'block';
+    panel.classList.toggle('active', unlocked);
+  }
+
+  if(unlocked){
+    renderOwnerDashboard();
+    renderAdminSubscriptions();
+    renderAdminUsers();
+  }
+};
+
+
+function openOwnerPanel(){
+  try{
+    if(typeof showSection === 'function'){
+      showSection('admin');
+    } else {
+      document.querySelectorAll('[id^="section-"]').forEach(el => el.style.display = 'none');
+      const admin = document.getElementById('section-admin');
+      if(admin) admin.style.display = 'block';
+    }
+
+    const admin = document.getElementById('section-admin');
+    if(admin){
+      admin.style.display = 'block';
+      admin.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    setTimeout(() => {
+      const pass = document.getElementById('admin-password');
+      if(pass) pass.focus();
+      if(typeof renderAdminPanel === 'function') renderAdminPanel();
+    }, 120);
+  }catch(e){
+    alert('Не удалось открыть кабинет. Обнови страницу через Ctrl+F5.');
+  }
 }
 
 </script>
@@ -2642,6 +2852,231 @@ body{
 .plan-action-row .plan-btn{flex:1;}
 @media(max-width:768px){.plan-grid{grid-template-columns:1fr;}.plan-price-rub{font-size:30px;}}
 
+
+/* ── Final DocsCoin two-sided coin + owner panel ── */
+.admin-hidden-entry{
+  opacity:.42;
+  font-size:12px;
+}
+.admin-hidden-entry:hover{
+  opacity:1;
+}
+
+/* Hide old flat coin logo if present and draw both sides with pseudo-elements */
+.raffle-coin-3d,
+.docscoin-coin,
+.mining-coin,
+.coin-3d{
+  position:relative !important;
+  transform-style:preserve-3d !important;
+  perspective:900px;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+}
+
+.raffle-coin-3d img,
+.docscoin-coin img,
+.mining-coin img,
+.coin-3d img,
+.raffle-coin-logo,
+.coin-logo-face,
+.coin-emblem{
+  opacity:0 !important;
+}
+
+.raffle-coin-3d::before,
+.raffle-coin-3d::after,
+.docscoin-coin::before,
+.docscoin-coin::after,
+.mining-coin::before,
+.mining-coin::after,
+.coin-3d::before,
+.coin-3d::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23ffffff' d='M100 16l16 30 34-9-3 35 33 13-26 23 15 33-36 4-10 34-23-24-23 24-10-34-36-4 15-33-26-23 33-13-3-35 34 9z'/%3E%3Ccircle cx='100' cy='100' r='28' fill='%2310b9c9'/%3E%3Ccircle cx='100' cy='100' r='14' fill='%23ffffff' opacity='.9'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 32% 26%, rgba(255,255,255,.62), transparent 18%),
+    linear-gradient(135deg,#14d8bd 0%,#1ea7f2 52%,#2563eb 100%);
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:58% 58%, auto, auto;
+  border:7px solid rgba(255,255,255,.86);
+  box-shadow:
+    inset 0 0 0 5px rgba(255,255,255,.24),
+    inset 0 0 0 16px rgba(0,70,150,.12),
+    inset 0 -18px 32px rgba(15,23,42,.14),
+    0 18px 38px rgba(37,99,235,.22);
+}
+
+.raffle-coin-3d::before,
+.docscoin-coin::before,
+.mining-coin::before,
+.coin-3d::before{
+  transform:translateZ(9px);
+}
+
+.raffle-coin-3d::after,
+.docscoin-coin::after,
+.mining-coin::after,
+.coin-3d::after{
+  transform:rotateY(180deg) translateZ(9px);
+}
+
+.raffle-coin-3d .coin-edge,
+.docscoin-coin .coin-edge,
+.mining-coin .coin-edge,
+.coin-3d .coin-edge{
+  position:absolute;
+  inset:5px;
+  border-radius:50%;
+  transform:translateZ(0);
+  background:linear-gradient(90deg,#0f8ec6,#0fd0b8,#2563eb);
+  box-shadow:inset 0 0 18px rgba(15,23,42,.24);
+}
+
+@keyframes docsCoinTrueSpin{
+  0%{transform:rotateY(0deg) rotateZ(-2deg);}
+  100%{transform:rotateY(360deg) rotateZ(-2deg);}
+}
+
+.raffle-coin-3d,
+.docscoin-coin,
+.mining-coin,
+.coin-3d{
+  animation:docsCoinTrueSpin 2.2s linear infinite !important;
+}
+
+/* Owner panel stats */
+.admin-stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:16px 0;
+}
+.admin-stat-card{
+  background:rgba(255,255,255,.78);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+.admin-stat-label{
+  font-size:12px;
+  color:var(--text-secondary);
+  margin-bottom:7px;
+  font-weight:700;
+}
+.admin-stat-value{
+  font-size:24px;
+  font-weight:900;
+  color:var(--text-primary);
+}
+.admin-chart-card{
+  background:rgba(255,255,255,.76);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 14px 34px rgba(15,23,42,.08);
+}
+.admin-chart{
+  width:100%;
+  height:210px;
+  display:block;
+}
+.admin-tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:12px 0 16px;
+}
+.admin-tab-btn{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.74);
+  color:var(--text-secondary);
+  padding:10px 13px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:800;
+}
+.admin-tab-btn.active{
+  color:white;
+  border-color:transparent;
+  background:linear-gradient(135deg,var(--accent),var(--accent-light));
+}
+.admin-user-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:rgba(20,184,166,.10);
+  color:var(--accent);
+  border:1px solid rgba(20,184,166,.14);
+  font-size:12px;
+  font-weight:800;
+}
+.admin-copy-btn{
+  border:none;
+  border-radius:10px;
+  padding:7px 10px;
+  background:rgba(59,130,246,.10);
+  color:#2563eb;
+  cursor:pointer;
+  font-weight:800;
+}
+@media(max-width:900px){
+  .admin-stats-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:560px){
+  .admin-stats-grid{grid-template-columns:1fr;}
+  .admin-chart{height:180px;}
+}
+
+
+/* ── Always visible owner entry button ── */
+.owner-floating-entry{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:9999;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(255,255,255,.72);
+  color:#64748b;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  cursor:pointer;
+  box-shadow:0 10px 28px rgba(15,23,42,.12);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  transition:.2s ease;
+}
+.owner-floating-entry:hover{
+  transform:translateY(-2px) scale(1.04);
+  color:var(--accent);
+  border-color:rgba(20,184,166,.36);
+  background:rgba(255,255,255,.92);
+}
+@media(max-width:768px){
+  .owner-floating-entry{
+    right:14px;
+    bottom:86px;
+    width:40px;
+    height:40px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3115,7 +3550,157 @@ H = 0.15 m"></textarea>
       </div>
     </div>
 
-    <div id="section-sub" style="display:none;flex:1;overflow-y:auto;">
+    
+      <section class="content-section" id="section-admin">
+        <div class="section-title">⚙️ Система</div>
+        <div class="section-subtitle">Закрытый кабинет владельца: статистика, пользователи и ручная выдача подписок.</div>
+
+        <div class="admin-lock-card" id="admin-lock-card">
+          <div class="admin-lock-icon">⚙️</div>
+          <h3>Системный вход</h3>
+          <p>Введите пароль владельца, чтобы открыть кабинет управления.</p>
+          <input class="admin-input" id="admin-password" type="password" placeholder="Пароль">
+          <button class="admin-main-btn" onclick="adminLogin()">Войти</button>
+          <div class="admin-status" id="admin-login-status"></div>
+          <div class="admin-hint">Тестовый пароль: <b>admin123</b>. Для продакшена перенеси кабинет на backend.</div>
+        </div>
+
+        <div class="admin-panel" id="admin-panel">
+          <div class="admin-top">
+            <div>
+              <h3>Кабинет владельца</h3>
+              <p>Статистика, email пользователей, DocsCoin и ручная выдача подписок.</p>
+            </div>
+            <button class="admin-logout-btn" onclick="adminLogout()">Выйти</button>
+          </div>
+
+          <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+              <div class="admin-stat-label">Пользователи</div>
+              <div class="admin-stat-value" id="admin-stat-users">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="admin-stat-label">Подтверждённые email</div>
+              <div class="admin-stat-value" id="admin-stat-verified">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="admin-stat-label">Активные подписки</div>
+              <div class="admin-stat-value" id="admin-stat-subs">0</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="admin-stat-label">DocsCoin всего</div>
+              <div class="admin-stat-value" id="admin-stat-coins">0</div>
+            </div>
+          </div>
+
+          <div class="admin-chart-card">
+            <div class="admin-card-head">
+              <h4>📈 Активность по тарифам</h4>
+              <button class="admin-secondary-btn small" onclick="renderOwnerDashboard()">Обновить</button>
+            </div>
+            <canvas class="admin-chart" id="admin-plan-chart" width="900" height="260"></canvas>
+          </div>
+
+          <div class="admin-tabs">
+            <button class="admin-tab-btn active" onclick="adminSwitchTab('grant', this)">Выдать подписку</button>
+            <button class="admin-tab-btn" onclick="adminSwitchTab('users', this)">Пользователи</button>
+            <button class="admin-tab-btn" onclick="adminSwitchTab('subs', this)">Подписки</button>
+          </div>
+
+          <div class="admin-tab-panel" id="admin-tab-grant">
+            <div class="admin-grid">
+              <div class="admin-card">
+                <h4>🎟 Выдать подписку</h4>
+                <label>Email или username</label>
+                <input class="admin-input" id="grant-user" placeholder="user@email.com или @username">
+
+                <label>Тариф</label>
+                <select class="admin-input" id="grant-plan">
+                  <option value="trial">Пробный</option>
+                  <option value="mega">Мега</option>
+                  <option value="base">Базовый</option>
+                  <option value="standard">Стандарт</option>
+                  <option value="pro">Про</option>
+                  <option value="max">Максимум</option>
+                </select>
+
+                <label>Срок</label>
+                <select class="admin-input" id="grant-days">
+                  <option value="1">1 день</option>
+                  <option value="7">7 дней</option>
+                  <option value="30" selected>30 дней</option>
+                  <option value="90">90 дней</option>
+                  <option value="365">1 год</option>
+                  <option value="9999">Навсегда</option>
+                </select>
+
+                <button class="admin-main-btn" onclick="grantSubscription()">Выдать подписку</button>
+                <div class="admin-status" id="grant-status"></div>
+              </div>
+
+              <div class="admin-card">
+                <h4>🧾 Проверить пользователя</h4>
+                <label>Email или username</label>
+                <input class="admin-input" id="lookup-user" placeholder="user@email.com или @username">
+                <button class="admin-secondary-btn" onclick="lookupSubscription()">Проверить</button>
+                <div class="admin-result" id="lookup-result">Введите пользователя и нажмите “Проверить”.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-tab-panel" id="admin-tab-users" style="display:none;">
+            <div class="admin-card">
+              <div class="admin-card-head">
+                <h4>📧 Email пользователей</h4>
+                <button class="admin-secondary-btn small" onclick="renderAdminUsers()">Обновить</button>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Email / username</th>
+                      <th>Подтверждение</th>
+                      <th>Запросы</th>
+                      <th>Дата</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-users-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-tab-panel" id="admin-tab-subs" style="display:none;">
+            <div class="admin-card">
+              <div class="admin-card-head">
+                <h4>👥 Выданные подписки</h4>
+                <button class="admin-secondary-btn small" onclick="renderAdminSubscriptions()">Обновить</button>
+              </div>
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Пользователь</th>
+                      <th>Тариф</th>
+                      <th>До</th>
+                      <th>Статус</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-subscriptions-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-note">
+            ⚠️ Это MVP на фронтенде. Статистика собирается из localStorage текущего браузера. Для реальных пользователей, безопасного пароля и настоящей статистики нужен backend.
+          </div>
+        </div>
+      </section>
+
+<div id="section-sub" style="display:none;flex:1;overflow-y:auto;">
 
       <div>
         <div class="section-title">💎 Подписка</div>
@@ -4027,7 +4612,10 @@ function textToPdfPrint() {
   const safeText = text.replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
   const w = window.open('', '_blank');
   if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
-  w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script>
+<button class="owner-floating-entry" id="owner-floating-entry" onclick="openOwnerPanel()" title="Система">⚙️</button>
+
+</body></html>`);
   w.document.close();
   setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
 }
