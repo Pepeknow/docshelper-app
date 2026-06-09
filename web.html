@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocsHelper — Layout Fixed</title>
+<title>DocsHelper — Engineer Service Entry</title>
 <script src="https://telegram.org/js/telegram-widget.js?22" async>
 // ── Secret Admin MVP ──
 const ADMIN_PASSWORD = 'admin123';
@@ -292,6 +292,165 @@ function ensureOwnerEntryVisible(){
 }
 window.addEventListener('load', ensureOwnerEntryVisible);
 setTimeout(ensureOwnerEntryVisible, 800);
+
+
+// ── Hard layout repair JS ──
+function hardFixDocsHelperLayout(){
+  const app = document.getElementById('app');
+  const sidebar = document.querySelector('.sidebar');
+  const main = document.querySelector('.main');
+  const entry = document.getElementById('owner-secret-entry');
+
+  if(entry){
+    entry.textContent = 'v1';
+    entry.style.position = 'fixed';
+    entry.style.right = '12px';
+    entry.style.bottom = '10px';
+    entry.style.left = 'auto';
+    entry.style.top = 'auto';
+    entry.style.display = 'block';
+    entry.style.zIndex = '2147483647';
+  }
+
+  if(window.innerWidth >= 901){
+    document.body.style.overflow = 'hidden';
+
+    if(app){
+      app.style.display = 'grid';
+      app.style.gridTemplateColumns = '330px minmax(0, 1fr)';
+      app.style.gridTemplateRows = '100vh';
+      app.style.width = '100vw';
+      app.style.height = '100vh';
+      app.style.overflow = 'hidden';
+    }
+
+    if(sidebar){
+      sidebar.style.width = '330px';
+      sidebar.style.minWidth = '330px';
+      sidebar.style.maxWidth = '330px';
+      sidebar.style.height = '100vh';
+      sidebar.style.display = 'flex';
+      sidebar.style.flexDirection = 'column';
+      sidebar.style.overflowY = 'auto';
+      sidebar.style.overflowX = 'hidden';
+      sidebar.style.borderRight = '1px solid var(--border)';
+      sidebar.style.borderBottom = 'none';
+    }
+
+    if(main){
+      main.style.height = '100vh';
+      main.style.minWidth = '0';
+      main.style.display = 'flex';
+      main.style.flexDirection = 'column';
+      main.style.overflow = 'hidden';
+    }
+  }
+}
+
+window.addEventListener('load', hardFixDocsHelperLayout);
+window.addEventListener('resize', hardFixDocsHelperLayout);
+setTimeout(hardFixDocsHelperLayout, 100);
+setTimeout(hardFixDocsHelperLayout, 800);
+setTimeout(hardFixDocsHelperLayout, 1800);
+
+
+// ── Robust section router repair ──
+function getMainSections(){
+  return [
+    'section-chat',
+    'chat-section',
+    'section-files',
+    'section-docs',
+    'section-engineer',
+    'section-excel',
+    'section-raffle',
+    'section-sub',
+    'section-admin'
+  ].map(id => document.getElementById(id)).filter(Boolean);
+}
+
+function normalizeSectionName(section){
+  const s = String(section || '').replace(/^section-/, '');
+  if(s === 'chat') return ['section-chat','chat-section'];
+  if(s === 'files') return ['section-files'];
+  if(s === 'docs') return ['section-docs'];
+  if(s === 'engineer') return ['section-engineer'];
+  if(s === 'excel' || s === 'smart-excel' || s === 'smart_excel') return ['section-excel'];
+  if(s === 'raffle') return ['section-raffle'];
+  if(s === 'sub' || s === 'subscription' || s === 'plans') return ['section-sub'];
+  if(s === 'admin') return ['section-admin'];
+  return ['section-' + s];
+}
+
+function showOnlySection(section){
+  const targetIds = normalizeSectionName(section);
+  const sections = getMainSections();
+  sections.forEach(sec => {
+    const isTarget = targetIds.includes(sec.id);
+    sec.classList.toggle('main-section-visible', isTarget);
+    sec.classList.toggle('main-section-hidden', !isTarget);
+    sec.style.display = isTarget
+      ? (sec.id === 'section-chat' || sec.id === 'chat-section' ? 'flex' : 'block')
+      : 'none';
+  });
+
+  document.querySelectorAll('.nav-link,.menu-item,.sidebar-nav button').forEach(btn => {
+    const onclick = btn.getAttribute('onclick') || '';
+    btn.classList.toggle('active', onclick.includes("'" + section + "'") || onclick.includes('"' + section + '"'));
+  });
+
+  if(section === 'admin' && typeof renderAdminPanel === 'function'){
+    setTimeout(renderAdminPanel, 80);
+  }
+}
+
+const previousShowSectionDocsHelper = typeof showSection === 'function' ? showSection : null;
+showSection = function(section){
+  if(section === 'admin'){
+    openOwnerSecret();
+    return;
+  }
+  showOnlySection(section);
+  try{
+    if(previousShowSectionDocsHelper && section !== 'admin'){
+      // Do not let old router re-show hidden sections after our fix.
+    }
+  }catch(e){}
+};
+
+function openOwnerSecret(){
+  showOnlySection('admin');
+  const admin = document.getElementById('section-admin');
+  if(admin){
+    admin.classList.remove('owner-hidden');
+    admin.classList.add('owner-visible');
+    admin.style.display = 'block';
+  }
+  const pass = document.getElementById('admin-password');
+  if(pass) setTimeout(() => pass.focus(), 80);
+  if(typeof renderAdminPanel === 'function') setTimeout(renderAdminPanel, 100);
+}
+
+function closeOwnerCabinet(){
+  const admin = document.getElementById('section-admin');
+  if(admin){
+    admin.classList.remove('owner-visible');
+    admin.classList.add('owner-hidden');
+  }
+  showOnlySection('engineer');
+}
+
+function initializeSectionRouter(){
+  const visible = getMainSections().find(sec => {
+    const st = window.getComputedStyle(sec);
+    return st.display !== 'none' && !sec.classList.contains('owner-visible');
+  });
+  const initial = visible ? visible.id.replace('section-','').replace('chat-section','chat') : 'chat';
+  showOnlySection(initial === 'chat-section' ? 'chat' : initial);
+}
+
+window.addEventListener('load', () => setTimeout(initializeSectionRouter, 150));
+setTimeout(initializeSectionRouter, 500);
 
 </script>
 <script defer src="https://unpkg.com/mathlive"></script>
@@ -3120,113 +3279,6 @@ body{
 }
 
 
-/* ── Layout repair: desktop/sidebar + stable chat input ── */
-@media (min-width: 769px){
-  body{
-    overflow:hidden !important;
-  }
-
-  #app{
-    display:flex !important;
-    flex-direction:row !important;
-    width:100vw !important;
-    height:100vh !important;
-    min-height:100vh !important;
-    overflow:hidden !important;
-  }
-
-  .sidebar{
-    position:relative !important;
-    width:330px !important;
-    min-width:330px !important;
-    max-width:330px !important;
-    height:100vh !important;
-    min-height:100vh !important;
-    flex:0 0 330px !important;
-    overflow-y:auto !important;
-    overflow-x:hidden !important;
-    display:flex !important;
-    flex-direction:column !important;
-    border-right:1px solid var(--border) !important;
-    border-bottom:none !important;
-  }
-
-  .main{
-    position:relative !important;
-    flex:1 1 auto !important;
-    min-width:0 !important;
-    height:100vh !important;
-    min-height:100vh !important;
-    overflow:hidden !important;
-    display:flex !important;
-    flex-direction:column !important;
-  }
-
-  .sidebar-nav,
-  .nav-menu,
-  .menu{
-    display:flex !important;
-    flex-direction:column !important;
-    gap:8px !important;
-    overflow:visible !important;
-    white-space:normal !important;
-  }
-
-  .nav-link{
-    width:100% !important;
-    justify-content:flex-start !important;
-    flex:0 0 auto !important;
-  }
-
-  #chat-section,
-  #section-chat{
-    height:100% !important;
-    min-height:0 !important;
-    flex:1 1 auto !important;
-    display:flex !important;
-    flex-direction:column !important;
-    overflow:hidden !important;
-  }
-
-  .messages,
-  #messages,
-  .chat-messages{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    overflow-y:auto !important;
-    padding-bottom:18px !important;
-  }
-
-  .input-area,
-  .chat-input-area,
-  .composer,
-  .input-wrap{
-    position:relative !important;
-    left:auto !important;
-    right:auto !important;
-    bottom:auto !important;
-    width:100% !important;
-    flex:0 0 auto !important;
-    border-top:1px solid var(--border) !important;
-    background:var(--bg-primary) !important;
-    z-index:10 !important;
-  }
-
-  #section-files,
-  #section-docs,
-  #section-engineer,
-  #section-sub,
-  #section-admin,
-  #section-excel,
-  #section-raffle,
-  .content-section{
-    flex:1 1 auto !important;
-    min-height:0 !important;
-    overflow-y:auto !important;
-    padding:24px !important;
-  }
-}
-
 /* Tablet/mobile: keep top navigation but prevent broken edges */
 @media (max-width: 768px){
   body{
@@ -3312,6 +3364,382 @@ body{
   display:block !important;
   flex:1 1 auto !important;
   overflow-y:auto !important;
+}
+
+
+/* ─────────────────────────────────────────────
+   HARD FINAL LAYOUT FIX — must be last CSS block
+   ───────────────────────────────────────────── */
+
+/* Desktop and laptop layout */
+@media screen and (min-width: 901px){
+  html,
+  body{
+    width:100% !important;
+    height:100% !important;
+    min-height:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+
+  body{
+    display:block !important;
+  }
+
+  #app{
+    display:grid !important;
+    grid-template-columns:330px minmax(0, 1fr) !important;
+    grid-template-rows:100vh !important;
+    width:100vw !important;
+    height:100vh !important;
+    min-height:100vh !important;
+    max-height:100vh !important;
+    overflow:hidden !important;
+  }
+
+  #app > .sidebar,
+  .sidebar{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+
+    width:330px !important;
+    min-width:330px !important;
+    max-width:330px !important;
+    height:100vh !important;
+    min-height:100vh !important;
+    max-height:100vh !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+
+    border-right:1px solid var(--border) !important;
+    border-bottom:none !important;
+    z-index:20 !important;
+  }
+
+  #app > .main,
+  .main{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    position:relative !important;
+    top:auto !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:100vh !important;
+    min-height:100vh !important;
+    max-height:100vh !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+  }
+
+  .sidebar-header,
+  .user-card,
+  .style-switcher,
+  .chat-list,
+  .sidebar-section,
+  .sidebar-footer{
+    width:100% !important;
+    max-width:100% !important;
+    flex:0 0 auto !important;
+  }
+
+  .nav,
+  .nav-menu,
+  .sidebar-nav,
+  .menu{
+    width:100% !important;
+    max-width:100% !important;
+    display:flex !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+    gap:8px !important;
+    overflow:visible !important;
+    white-space:normal !important;
+  }
+
+  .nav-link,
+  .menu-item,
+  .sidebar-nav button{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    flex:0 0 auto !important;
+    display:flex !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    white-space:normal !important;
+  }
+
+  .topbar,
+  .mobile-tabs,
+  .bottom-nav{
+    max-width:100% !important;
+  }
+
+  #chat-section,
+  #section-chat,
+  .chat-section{
+    flex:1 1 auto !important;
+    height:100% !important;
+    min-height:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+  }
+
+  .messages,
+  #messages,
+  .chat-messages,
+  .message-list{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+
+  .input-area,
+  .chat-input-area,
+  .composer,
+  .input-wrap,
+  .chat-composer{
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    top:auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    flex:0 0 auto !important;
+    z-index:30 !important;
+    border-top:1px solid var(--border) !important;
+  }
+
+  #section-files,
+  #section-docs,
+  #section-engineer,
+  #section-sub,
+  #section-admin,
+  #section-excel,
+  #section-raffle,
+  .content-section{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    padding:24px !important;
+  }
+
+  .section-title,
+  .section-subtitle{
+    max-width:100% !important;
+  }
+}
+
+/* Phones and narrow screens */
+@media screen and (max-width: 900px){
+  html,
+  body{
+    width:100% !important;
+    min-height:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  #app{
+    display:flex !important;
+    flex-direction:column !important;
+    width:100vw !important;
+    min-height:100vh !important;
+    overflow-x:hidden !important;
+  }
+
+  .sidebar{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow-x:hidden !important;
+  }
+
+  .main{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    flex:1 1 auto !important;
+    overflow-x:hidden !important;
+  }
+
+  .nav,
+  .nav-menu,
+  .sidebar-nav,
+  .menu{
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    max-width:100vw !important;
+    scrollbar-width:none !important;
+  }
+
+  .nav::-webkit-scrollbar,
+  .nav-menu::-webkit-scrollbar,
+  .sidebar-nav::-webkit-scrollbar,
+  .menu::-webkit-scrollbar{
+    display:none !important;
+  }
+
+  .nav-link,
+  .menu-item,
+  .sidebar-nav button{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+  }
+}
+
+/* Owner entry must always be visible */
+.owner-secret-entry{
+  position:fixed !important;
+  right:12px !important;
+  bottom:10px !important;
+  left:auto !important;
+  top:auto !important;
+  display:block !important;
+  width:auto !important;
+  height:auto !important;
+  z-index:2147483647 !important;
+  border:0 !important;
+  background:rgba(15,23,42,.12) !important;
+  color:rgba(100,116,139,.70) !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  padding:7px 8px !important;
+  border-radius:10px !important;
+  cursor:pointer !important;
+  opacity:.72 !important;
+}
+.owner-secret-entry:hover{
+  opacity:1 !important;
+  color:var(--accent) !important;
+  background:rgba(20,184,166,.14) !important;
+}
+
+
+/* ── Section display repair + engineer service entry ── */
+.engineer-owner-entry-wrap{
+  display:flex;
+  justify-content:flex-end;
+  max-width:800px;
+  margin:-8px auto 12px;
+}
+.engineer-owner-entry{
+  border:1px solid rgba(100,116,139,.18);
+  background:rgba(255,255,255,.55);
+  color:rgba(100,116,139,.72);
+  border-radius:10px;
+  padding:7px 10px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.engineer-owner-entry:hover{
+  color:var(--accent);
+  background:rgba(20,184,166,.10);
+  border-color:rgba(20,184,166,.22);
+}
+
+/* Kill floating old owner entry completely */
+.owner-secret-entry{
+  display:none !important;
+}
+
+/* Only one main section should be visible */
+.main-section-hidden{
+  display:none !important;
+}
+.main-section-visible{
+  display:flex !important;
+}
+#section-files.main-section-visible,
+#section-docs.main-section-visible,
+#section-engineer.main-section-visible,
+#section-sub.main-section-visible,
+#section-excel.main-section-visible,
+#section-raffle.main-section-visible,
+#section-admin.main-section-visible{
+  display:block !important;
+}
+
+/* Chat input must stay inside chat only */
+#section-chat.main-section-hidden .input-area,
+#section-chat.main-section-hidden .chat-input-area,
+#section-chat.main-section-hidden .composer,
+#section-chat.main-section-hidden .input-wrap{
+  display:none !important;
+}
+
+/* Desktop sidebar stays left, main takes only right column */
+@media screen and (min-width:901px){
+  #app{
+    display:grid !important;
+    grid-template-columns:330px minmax(0,1fr) !important;
+    grid-template-rows:100vh !important;
+  }
+  .sidebar{
+    grid-column:1 !important;
+    width:330px !important;
+    min-width:330px !important;
+    max-width:330px !important;
+    height:100vh !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+  .main{
+    grid-column:2 !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:100vh !important;
+    overflow:hidden !important;
+  }
+  #section-chat.main-section-visible{
+    height:100vh !important;
+    min-height:0 !important;
+    overflow:hidden !important;
+    flex-direction:column !important;
+  }
+  #section-files.main-section-visible,
+  #section-docs.main-section-visible,
+  #section-engineer.main-section-visible,
+  #section-sub.main-section-visible,
+  #section-excel.main-section-visible,
+  #section-raffle.main-section-visible,
+  #section-admin.main-section-visible{
+    height:100vh !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    padding:24px !important;
+  }
 }
 
 </style>
@@ -3788,6 +4216,10 @@ H = 0.15 m"></textarea>
     
       <section class="content-section owner-hidden" id="section-admin">
         <div class="section-title">⚙️ Панель управления</div>
+        <div class="engineer-owner-entry-wrap">
+          <button class="engineer-owner-entry" onclick="openOwnerSecret()">Сервис</button>
+        </div>
+
         <div class="section-subtitle">Статистика, пользователи и ручная выдача подписок.</div>
 
         <div class="admin-lock-card" id="admin-lock-card">
@@ -4846,8 +5278,6 @@ function textToPdfPrint() {
   const w = window.open('', '_blank');
   if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
   w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script>
-  <button class="owner-secret-entry" id="owner-secret-entry" onclick="openOwnerSecret()" title="version">v1</button>
-
 </body></html>`);
   w.document.close();
   setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
