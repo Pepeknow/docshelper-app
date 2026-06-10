@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-widget.js?22" async></script>
 <script>
 // ── Secret Admin MVP ──
-const ADMIN_PASSWORD = 'TocHem3';
+const ADMIN_PASSWORD = 'admin123';
 
 function getAdminSubscriptions(){try{return JSON.parse(localStorage.getItem('dh_admin_subscriptions')||'{}')}catch(e){return {}}}
 function saveAdminSubscriptions(data){localStorage.setItem('dh_admin_subscriptions',JSON.stringify(data))}
@@ -6106,6 +6106,309 @@ body{display:block !important;}
   setTimeout(boot, 1600);
 })();
 </script>
+
+
+<script>
+/* ─────────────────────────────────────────────
+   DOCSHELPER REFERRAL RAFFLE PATCH v8
+   Referral links + raffle access for inviter/invited + 1000 DocsCoin reward.
+   Static MVP note: rewards are stored in localStorage on the browser that opens the link.
+   ───────────────────────────────────────────── */
+(function(){
+  'use strict';
+
+  var REF_KEY = 'dh_ref_invited_by';
+  var MY_REF_KEY = 'dh_ref_my_code';
+  var REF_STATS_KEY = 'dh_ref_stats';
+  var REF_BANK_KEY = 'dh_ref_reward_bank';
+  var REF_PROCESSED_KEY = 'dh_ref_processed_codes';
+  var REF_REWARD = 1000;
+
+  function byId(id){ return document.getElementById(id); }
+  function safeText(id, value){ var el = byId(id); if(el) el.textContent = value; }
+
+  function normalizeRef(value){
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_\-]/g, '')
+      .slice(0, 32);
+  }
+
+  function readJSON(key, fallback){
+    try{return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));}
+    catch(e){return fallback;}
+  }
+
+  function writeJSON(key, value){
+    localStorage.setItem(key, JSON.stringify(value || {}));
+  }
+
+  function getCurrentUserSeed(){
+    return localStorage.getItem('dh_web_email') ||
+           localStorage.getItem('dh_web_name') ||
+           localStorage.getItem('user_email') ||
+           localStorage.getItem('user_name') ||
+           'guest';
+  }
+
+  function simpleHash(text){
+    var h = 2166136261;
+    text = String(text || 'guest');
+    for(var i = 0; i < text.length; i++){
+      h ^= text.charCodeAt(i);
+      h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+    }
+    return (h >>> 0).toString(36);
+  }
+
+  function getMyRefCode(){
+    var saved = normalizeRef(localStorage.getItem(MY_REF_KEY));
+    if(saved) return saved;
+    var base = getCurrentUserSeed();
+    var code = 'dh-' + simpleHash(base + '|' + location.hostname).slice(0, 8);
+    localStorage.setItem(MY_REF_KEY, code);
+    return code;
+  }
+
+  function getRefLink(){
+    var code = getMyRefCode();
+    var cleanUrl = location.origin + location.pathname;
+    return cleanUrl + '?ref=' + encodeURIComponent(code);
+  }
+
+  function getCoinBalance(){
+    return Number(localStorage.getItem('dh_docscoin_balance') || localStorage.getItem('docscoin_balance') || 0) || 0;
+  }
+
+  function setCoinBalance(value){
+    value = Math.max(0, Math.floor(Number(value || 0)));
+    localStorage.setItem('dh_docscoin_balance', String(value));
+    localStorage.setItem('docscoin_balance', String(value));
+    safeText('admin-stat-coins', compactNumberSafe(value));
+    safeText('raffle-ref-coins', compactNumberSafe(value));
+  }
+
+  function addCoins(amount){
+    setCoinBalance(getCoinBalance() + Number(amount || 0));
+  }
+
+  function compactNumberSafe(n){
+    n = Number(n || 0);
+    if(n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if(n >= 1000) return (n/1000).toFixed(1) + 'K';
+    return String(Math.floor(n));
+  }
+
+  function getRefStats(){ return readJSON(REF_STATS_KEY, {}); }
+  function saveRefStats(stats){ writeJSON(REF_STATS_KEY, stats || {}); }
+
+  function recordIncomingReferral(incoming){
+    var processed = readJSON(REF_PROCESSED_KEY, {});
+    var visitKey = incoming + '|' + (localStorage.getItem('dh_web_email') || localStorage.getItem('dh_web_name') || 'guest') + '|' + location.pathname;
+    if(processed[visitKey]) return;
+    processed[visitKey] = Date.now();
+    writeJSON(REF_PROCESSED_KEY, processed);
+
+    var bank = readJSON(REF_BANK_KEY, {});
+    bank[incoming] = Number(bank[incoming] || 0) + REF_REWARD;
+    writeJSON(REF_BANK_KEY, bank);
+
+    var stats = getRefStats();
+    stats[incoming] = stats[incoming] || {invites:0, coins:0};
+    stats[incoming].invites = Number(stats[incoming].invites || 0) + 1;
+    stats[incoming].coins = Number(stats[incoming].coins || 0) + REF_REWARD;
+    saveRefStats(stats);
+  }
+
+  function claimMyReferralRewards(){
+    var my = normalizeRef(getMyRefCode());
+    var bank = readJSON(REF_BANK_KEY, {});
+    var reward = Number(bank[my] || 0);
+    if(reward > 0){
+      addCoins(reward);
+      bank[my] = 0;
+      writeJSON(REF_BANK_KEY, bank);
+      localStorage.setItem('dh_raffle_inviter_access', '1');
+      updateReferralPanel();
+    }
+    return reward;
+  }
+
+  function markIncomingReferral(){
+    try{
+      var params = new URLSearchParams(location.search || '');
+      var incoming = normalizeRef(params.get('ref'));
+      var mine = normalizeRef(getMyRefCode());
+      if(!incoming || incoming === mine){
+        localStorage.setItem('dh_raffle_inviter_access', '1');
+        claimMyReferralRewards();
+        return;
+      }
+
+      localStorage.setItem(REF_KEY, incoming);
+      localStorage.setItem('dh_raffle_invited_access', '1');
+      localStorage.setItem('dh_ref_joined_at', String(Date.now()));
+      recordIncomingReferral(incoming);
+    }catch(e){}
+  }
+
+  function hasReferralAccess(){
+    return localStorage.getItem('dh_raffle_invited_access') === '1' ||
+           localStorage.getItem('dh_raffle_inviter_access') === '1' ||
+           !!normalizeRef(localStorage.getItem(REF_KEY)) ||
+           !!normalizeRef(localStorage.getItem(MY_REF_KEY));
+  }
+
+  function getMyStats(){
+    var my = normalizeRef(getMyRefCode());
+    var stats = getRefStats()[my] || {invites:0, coins:0};
+    var bank = readJSON(REF_BANK_KEY, {});
+    return {
+      invites: Number(stats.invites || 0),
+      coins: Number(stats.coins || 0),
+      pending: Number(bank[my] || 0)
+    };
+  }
+
+  function injectReferralStyles(){
+    if(byId('dh-referral-raffle-style')) return;
+    var style = document.createElement('style');
+    style.id = 'dh-referral-raffle-style';
+    style.textContent = `
+      .referral-card{margin:16px 0 0;border-radius:22px;border:1px solid rgba(125,211,252,.38);background:rgba(255,255,255,.78);box-shadow:0 12px 28px rgba(15,23,42,.06);padding:16px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+      .referral-kicker{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#0284c7;margin-bottom:5px}
+      .referral-title{font-size:17px;font-weight:950;color:var(--text-primary);margin-bottom:5px}
+      .referral-desc{font-size:13px;color:var(--text-secondary);line-height:1.45;margin-bottom:10px}
+      .referral-link-row{display:flex;gap:8px;align-items:center;min-width:0}
+      .referral-link-input{width:100%;min-width:0;border:1px solid var(--border);border-radius:14px;background:rgba(248,250,252,.92);padding:11px 12px;color:var(--text-primary);font-size:13px;font-weight:700;outline:none}
+      .referral-mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;min-width:420px}
+      .referral-mini-stat{border-radius:16px;background:rgba(240,249,255,.82);border:1px solid rgba(125,211,252,.32);padding:12px;text-align:center}
+      .referral-mini-label{font-size:11px;color:var(--text-secondary);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+      .referral-mini-value{font-size:22px;font-weight:950;color:#0284c7;margin-top:3px}
+      .referral-access-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 10px;background:rgba(16,185,129,.11);border:1px solid rgba(16,185,129,.22);color:#059669;font-size:12px;font-weight:900;margin-top:10px}
+      .referral-reward-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 10px;background:rgba(250,204,21,.16);border:1px solid rgba(250,204,21,.34);color:#a16207;font-size:12px;font-weight:900;margin-top:10px;margin-left:7px}
+      @media(max-width:980px){.referral-card{grid-template-columns:1fr}.referral-mini-stats{min-width:0}}
+      @media(max-width:768px){.referral-mini-stats{grid-template-columns:1fr 1fr}.referral-link-row{flex-direction:column;align-items:stretch}.referral-link-row .raffle-btn{width:100%}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureReferralPanel(){
+    var game = byId('raffle-game');
+    if(!game) return;
+    var existing = byId('raffle-referral-card');
+    if(existing) return;
+    var hero = game.querySelector('.raffle-hero');
+    var card = document.createElement('div');
+    card.id = 'raffle-referral-card';
+    card.className = 'referral-card';
+    card.innerHTML = `
+      <div>
+        <div class="referral-kicker">Реферальная программа</div>
+        <div class="referral-title">Приглашай друзей в розыгрыш и получай DocsCoin</div>
+        <div class="referral-desc">За каждого приглашённого по твоей ссылке начисляется <b>1000 монет</b> пригласителю. Раздел «Розыгрыш» открывается и пригласителю, и приглашённому.</div>
+        <div class="referral-link-row">
+          <input id="raffle-ref-link" class="referral-link-input" readonly value="">
+          <button class="raffle-btn" type="button" onclick="copyRaffleReferralLink()">Скопировать</button>
+          <button class="raffle-btn secondary" type="button" onclick="claimRaffleReferralReward()">Забрать</button>
+        </div>
+        <div id="raffle-ref-access" class="referral-access-pill" style="display:none;">✅ Розыгрыш открыт по реферальной программе</div>
+        <div id="raffle-ref-reward" class="referral-reward-pill" style="display:none;">🪙 Есть награда: 0</div>
+      </div>
+      <div class="referral-mini-stats">
+        <div class="referral-mini-stat"><div class="referral-mini-label">Мой код</div><div class="referral-mini-value" id="raffle-ref-code">—</div></div>
+        <div class="referral-mini-stat"><div class="referral-mini-label">Друзей</div><div class="referral-mini-value" id="raffle-ref-invites">0</div></div>
+        <div class="referral-mini-stat"><div class="referral-mini-label">Заработано</div><div class="referral-mini-value" id="raffle-ref-earned">0</div></div>
+        <div class="referral-mini-stat"><div class="referral-mini-label">Баланс</div><div class="referral-mini-value" id="raffle-ref-coins">0</div></div>
+      </div>
+    `;
+    if(hero && hero.parentNode) hero.parentNode.insertBefore(card, hero.nextSibling);
+    else game.insertBefore(card, game.firstChild);
+  }
+
+  function updateReferralPanel(){
+    ensureReferralPanel();
+    var stats = getMyStats();
+    safeText('raffle-ref-code', getMyRefCode().replace(/^dh-/, '').toUpperCase());
+    safeText('raffle-ref-invites', stats.invites);
+    safeText('raffle-ref-earned', compactNumberSafe(stats.coins));
+    safeText('raffle-ref-coins', compactNumberSafe(getCoinBalance()));
+    var input = byId('raffle-ref-link');
+    if(input) input.value = getRefLink();
+    var access = byId('raffle-ref-access');
+    if(access) access.style.display = hasReferralAccess() ? 'inline-flex' : 'none';
+    var reward = byId('raffle-ref-reward');
+    if(reward){
+      reward.textContent = '🪙 Есть награда: ' + compactNumberSafe(stats.pending);
+      reward.style.display = stats.pending > 0 ? 'inline-flex' : 'none';
+    }
+
+    var lockTitle = document.querySelector('#raffle-lock .raffle-title');
+    if(lockTitle) lockTitle.textContent = 'Розыгрыш доступен с подпиской или по приглашению';
+    var lockSub = document.querySelector('#raffle-lock .raffle-subtitle');
+    if(lockSub) lockSub.textContent = 'Оформи подписку или открой реферальную ссылку от друга. Пригласитель получает 1000 DocsCoin за каждого приглашённого, а приглашённый тоже получает доступ к розыгрышу.';
+  }
+
+  window.copyRaffleReferralLink = function(){
+    localStorage.setItem('dh_raffle_inviter_access', '1');
+    updateReferralPanel();
+    var link = getRefLink();
+    function done(){ alert('Реферальная ссылка скопирована. Раздел «Розыгрыш» открыт для тебя как для пригласителя.'); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(done).catch(function(){ prompt('Скопируй ссылку:', link); });
+    }else{
+      prompt('Скопируй ссылку:', link);
+    }
+  };
+
+  window.claimRaffleReferralReward = function(){
+    var reward = claimMyReferralRewards();
+    if(reward > 0) alert('Начислено +' + reward + ' DocsCoin за приглашённых.');
+    else alert('Пока нет новых наград за приглашённых.');
+  };
+
+  markIncomingReferral();
+  injectReferralStyles();
+
+  if(typeof window.getRafflePlanInfo === 'function'){
+    var oldPlanInfo = window.getRafflePlanInfo;
+    window.getRafflePlanInfo = getRafflePlanInfo = function(){
+      if(hasReferralAccess()) return {name:'Referral', mult:1.0, locked:false};
+      return oldPlanInfo();
+    };
+  }
+
+  if(typeof window.isRaffleLocked === 'function'){
+    var oldLocked = window.isRaffleLocked;
+    window.isRaffleLocked = isRaffleLocked = function(){
+      if(hasReferralAccess()) return false;
+      return oldLocked();
+    };
+  }
+
+  if(typeof window.renderRaffle === 'function'){
+    var oldRender = window.renderRaffle;
+    window.renderRaffle = renderRaffle = function(){
+      oldRender();
+      updateReferralPanel();
+    };
+  }
+
+  function bootReferralRaffle(){
+    markIncomingReferral();
+    injectReferralStyles();
+    claimMyReferralRewards();
+    updateReferralPanel();
+    if(typeof renderRaffle === 'function') renderRaffle();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootReferralRaffle);
+  else bootReferralRaffle();
+  window.addEventListener('load', bootReferralRaffle);
+  setTimeout(bootReferralRaffle, 300);
+  setTimeout(bootReferralRaffle, 1200);
+})();</script>
 
 </body>
 </html>
