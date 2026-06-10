@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-widget.js?22" async></script>
 <script>
 // ── Secret Admin MVP ──
-const ADMIN_PASSWORD = 'admin123';
+const ADMIN_PASSWORD = 'TocHem183';
 
 function getAdminSubscriptions(){try{return JSON.parse(localStorage.getItem('dh_admin_subscriptions')||'{}')}catch(e){return {}}}
 function saveAdminSubscriptions(data){localStorage.setItem('dh_admin_subscriptions',JSON.stringify(data))}
@@ -5977,6 +5977,55 @@ body{display:block !important;}
 @media(max-width:600px){
   .sidebar{max-height:180px !important;}
   #owner-secret-entry,.owner-secret-entry{right:10px !important;bottom:8px !important;}
+}
+
+
+/* ─────────────────────────────────────────────
+   Formula Pad absolute layout fix v9
+   math-field без MathLive ведёт себя как inline-элемент,
+   поэтому поле формулы налезало на textarea.
+   ───────────────────────────────────────────── */
+.formula-pad{
+  overflow:visible !important;
+}
+.formula-pad math-field.formula-math-field,
+.formula-math-field{
+  display:block !important;
+  width:100% !important;
+  min-height:64px !important;
+  height:auto !important;
+  line-height:1.35 !important;
+  padding:16px 18px !important;
+  margin:0 0 14px 0 !important;
+  border:2px solid var(--border) !important;
+  border-radius:18px !important;
+  background:var(--bg-secondary) !important;
+  color:var(--text-primary) !important;
+  box-sizing:border-box !important;
+  position:relative !important;
+  z-index:1 !important;
+  white-space:normal !important;
+}
+.formula-input{
+  display:block !important;
+  width:100% !important;
+  min-height:180px !important;
+  margin:0 !important;
+  position:relative !important;
+  z-index:0 !important;
+  box-sizing:border-box !important;
+}
+@media(max-width:768px){
+  .formula-pad math-field.formula-math-field,
+  .formula-math-field{
+    min-height:58px !important;
+    font-size:18px !important;
+    padding:14px 15px !important;
+    margin-bottom:12px !important;
+  }
+  .formula-input{
+    min-height:170px !important;
+  }
 }
 </style>
 
