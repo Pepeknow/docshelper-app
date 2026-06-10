@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-widget.js?22" async></script>
 <script>
 // ── Secret Admin MVP ──
-const ADMIN_PASSWORD = 'TocHem183';
+const ADMIN_PASSWORD = 'TocHem3';
 
 function getAdminSubscriptions(){try{return JSON.parse(localStorage.getItem('dh_admin_subscriptions')||'{}')}catch(e){return {}}}
 function saveAdminSubscriptions(data){localStorage.setItem('dh_admin_subscriptions',JSON.stringify(data))}
@@ -3730,7 +3730,7 @@ button{
   </div>
 
   <div class="main">
-    <div id="section-chat" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+    <div id="section-chat" class="dh-active-section" style="display:flex;flex-direction:column;flex:1;min-height:0;">
       <div class="main-header">
         <div class="main-title" id="chat-title">Новый чат</div>
         <select class="model-select" id="model-select" onchange="updateEngineeringLimit()">
@@ -4351,6 +4351,7 @@ H = 0.15 m"></textarea>
         </p>
       </div>
     </div>
+<button class="owner-secret-entry" id="owner-secret-entry" onclick="openOwnerSecret()" title="Панель владельца">v1</button>
 <script>
 
 // ── Local PDF fallback without CDN ──
@@ -5151,7 +5152,6 @@ function textToPdfPrint() {
   const w = window.open('', '_blank');
   if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
   w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><scr" + "ipt>setTimeout(()=>window.print(),500)</scr" + "ipt>
-  <button class="owner-secret-entry" id="owner-secret-entry" onclick="openOwnerSecret()" title="version">v1</button>
 </body></html>`);
   w.document.close();
   setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
@@ -5757,6 +5757,353 @@ setTimeout(renderRaffle, 500);
   window.addEventListener('resize', hardenLayout);
   setTimeout(hardenLayout, 250);
   setTimeout(hardenLayout, 1200);
+})();
+</script>
+
+
+<script>
+// ── FINAL HOTFIX v4: deterministic section router + restored owner entry ──
+(function(){
+  'use strict';
+
+  var sectionNames = ['chat','files','docs','engineer','excel','raffle','sub','admin'];
+
+  function byId(id){ return document.getElementById(id); }
+
+  function ensureOwnerButton(){
+    var btn = byId('owner-secret-entry');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'owner-secret-entry';
+      btn.className = 'owner-secret-entry';
+      btn.type = 'button';
+      btn.title = 'Панель владельца';
+      btn.textContent = 'v1';
+      document.body.appendChild(btn);
+    }
+    btn.onclick = function(){ window.openOwnerSecret(); };
+    btn.style.display = 'flex';
+    return btn;
+  }
+
+  function activateSection(name){
+    if(sectionNames.indexOf(name) === -1) name = 'chat';
+
+    sectionNames.forEach(function(s){
+      var el = byId('section-' + s);
+      if(!el) return;
+
+      var active = s === name;
+      el.classList.toggle('dh-active-section', active);
+
+      if(active){
+        el.style.display = s === 'chat' ? 'flex' : 'block';
+        el.style.visibility = 'visible';
+        el.style.height = 'auto';
+        el.style.maxHeight = 'none';
+        el.style.overflow = s === 'chat' ? 'hidden' : 'auto';
+        if(s === 'admin'){
+          el.classList.remove('owner-hidden');
+          el.classList.add('owner-visible');
+        }
+      }else{
+        el.classList.remove('owner-visible');
+        if(s === 'admin') el.classList.add('owner-hidden');
+        el.style.display = 'none';
+        el.style.visibility = 'hidden';
+      }
+    });
+
+    ['chat','files','docs','engineer','excel','raffle','sub'].forEach(function(s){
+      var nav = byId('nav-' + s);
+      if(nav) nav.classList.toggle('active', s === name);
+    });
+
+    ensureOwnerButton();
+
+    if(name === 'admin' && typeof renderAdminPanel === 'function'){
+      setTimeout(renderAdminPanel, 60);
+      var pass = byId('admin-password');
+      if(pass) setTimeout(function(){ pass.focus(); }, 100);
+    }
+  }
+
+  window.showSection = function(name){ activateSection(name); };
+  window.openOwnerSecret = function(){ activateSection('admin'); };
+  window.closeOwnerCabinet = function(){ activateSection('chat'); };
+
+  function boot(){
+    ensureOwnerButton();
+    var current = 'chat';
+    sectionNames.forEach(function(s){
+      var el = byId('section-' + s);
+      if(el && (el.classList.contains('dh-active-section') || getComputedStyle(el).display !== 'none')) current = s;
+    });
+    if(current === 'admin') current = 'chat';
+    activateSection(current || 'chat');
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  window.addEventListener('load', boot);
+  setTimeout(boot, 300);
+  setTimeout(boot, 1200);
+})();
+</script>
+
+
+<style>
+/* ─────────────────────────────────────────────
+   DOCSHELPER ABSOLUTE STABILITY PATCH v6
+   Last CSS in file. It overrides old duplicate rules.
+   ───────────────────────────────────────────── */
+html, body{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:100% !important;
+  margin:0 !important;
+  overflow:hidden !important;
+}
+body{display:block !important;}
+#dvd-bg,.dvd-logo{display:none !important;visibility:hidden !important;pointer-events:none !important;}
+#app{
+  width:100vw !important;
+  height:100vh !important;
+  height:100dvh !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+#app.dh-app-ready{
+  display:grid !important;
+  grid-template-columns:280px minmax(0,1fr) !important;
+  grid-template-rows:100% !important;
+}
+.sidebar{
+  width:280px !important;
+  min-width:280px !important;
+  max-width:280px !important;
+  height:100% !important;
+  min-height:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  flex:none !important;
+}
+.main{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  height:100% !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+.main-header,.input-area{flex:0 0 auto !important;}
+#section-chat,
+#section-files,
+#section-docs,
+#section-engineer,
+#section-excel,
+#section-raffle,
+#section-sub,
+#section-admin{
+  display:none !important;
+  visibility:hidden !important;
+  min-width:0 !important;
+  min-height:0 !important;
+}
+#section-chat.dh-visible-section{
+  display:flex !important;
+  visibility:visible !important;
+  flex:1 1 auto !important;
+  height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+  flex-direction:column !important;
+}
+#section-chat.dh-visible-section .chat-area{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+#section-files.dh-visible-section,
+#section-docs.dh-visible-section,
+#section-engineer.dh-visible-section,
+#section-excel.dh-visible-section,
+#section-raffle.dh-visible-section,
+#section-sub.dh-visible-section,
+#section-admin.dh-visible-section{
+  display:block !important;
+  visibility:visible !important;
+  flex:1 1 auto !important;
+  height:100% !important;
+  min-height:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+#owner-secret-entry,.owner-secret-entry{
+  position:fixed !important;
+  right:12px !important;
+  bottom:10px !important;
+  left:auto !important;
+  top:auto !important;
+  z-index:2147483647 !important;
+  width:42px !important;
+  height:30px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(99,102,241,.35) !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.94) !important;
+  color:#6366f1 !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  cursor:pointer !important;
+  box-shadow:0 8px 22px rgba(15,23,42,.18) !important;
+  opacity:.88 !important;
+  pointer-events:auto !important;
+}
+#owner-secret-entry:hover{opacity:1 !important;transform:translateY(-1px) !important;}
+@media(max-width:900px){
+  #app.dh-app-ready{display:flex !important;flex-direction:column !important;}
+  .sidebar{width:100% !important;max-width:100% !important;min-width:0 !important;height:auto !important;max-height:230px !important;}
+  .main{flex:1 1 auto !important;}
+}
+@media(max-width:600px){
+  .sidebar{max-height:180px !important;}
+  #owner-secret-entry,.owner-secret-entry{right:10px !important;bottom:8px !important;}
+}
+</style>
+
+<script>
+// ── DOCSHELPER ABSOLUTE STABILITY PATCH v6 ──
+(function(){
+  'use strict';
+
+  var sections = ['chat','files','docs','engineer','excel','raffle','sub','admin'];
+  var navs = ['chat','files','docs','engineer','excel','raffle','sub'];
+
+  function byId(id){ return document.getElementById(id); }
+
+  function removeBadBackground(){
+    document.querySelectorAll('#dvd-bg,.dvd-logo').forEach(function(el){
+      if(el && el.parentNode) el.parentNode.removeChild(el);
+    });
+  }
+
+  function makeOwnerButton(){
+    var btn = byId('owner-secret-entry');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'owner-secret-entry';
+      btn.className = 'owner-secret-entry';
+      btn.type = 'button';
+      document.body.appendChild(btn);
+    }
+    btn.textContent = 'v1';
+    btn.title = 'Панель владельца';
+    btn.setAttribute('aria-label','Панель владельца');
+    btn.onclick = function(e){
+      if(e) e.preventDefault();
+      showOnly('admin');
+      return false;
+    };
+    return btn;
+  }
+
+  function prepareAppLayout(){
+    var app = byId('app');
+    if(!app) return;
+    if(getComputedStyle(app).display !== 'none'){
+      app.classList.add('dh-app-ready');
+    }
+  }
+
+  function showOnly(name){
+    if(sections.indexOf(name) < 0) name = 'chat';
+    removeBadBackground();
+    prepareAppLayout();
+
+    sections.forEach(function(s){
+      var el = byId('section-' + s);
+      if(!el) return;
+      var active = s === name;
+      el.classList.toggle('active', active);
+      el.classList.toggle('dh-active-section', active);
+      el.classList.toggle('dh-visible-section', active);
+      el.classList.toggle('owner-visible', active && s === 'admin');
+      el.classList.toggle('owner-hidden', !active && s === 'admin');
+      el.style.setProperty('display', active ? (s === 'chat' ? 'flex' : 'block') : 'none', 'important');
+      el.style.setProperty('visibility', active ? 'visible' : 'hidden', 'important');
+      el.style.setProperty('overflow-x', 'hidden', 'important');
+      el.style.setProperty('overflow-y', active && s !== 'chat' ? 'auto' : 'hidden', 'important');
+      if(active){
+        el.style.setProperty('min-height', '0', 'important');
+        el.style.setProperty('height', '100%', 'important');
+      }
+    });
+
+    navs.forEach(function(s){
+      var nav = byId('nav-' + s);
+      if(nav) nav.classList.toggle('active', s === name);
+    });
+
+    makeOwnerButton();
+
+    if(name === 'admin'){
+      var app = byId('app');
+      var auth = byId('auth-screen');
+      if(app && getComputedStyle(app).display === 'none'){
+        app.style.setProperty('display','grid','important');
+        app.classList.add('dh-app-ready');
+      }
+      if(auth) auth.style.setProperty('display','none','important');
+      if(typeof renderAdminPanel === 'function') setTimeout(renderAdminPanel, 50);
+      var p = byId('admin-password');
+      if(p) setTimeout(function(){ p.focus(); }, 100);
+    }
+  }
+
+  window.showSection = showOnly;
+  window.openOwnerSecret = function(){ showOnly('admin'); };
+  window.closeOwnerCabinet = function(){ showOnly('chat'); };
+
+  function boot(){
+    removeBadBackground();
+    makeOwnerButton();
+    prepareAppLayout();
+    var active = 'chat';
+    try{
+      var hash = (location.hash || '').replace('#','').replace('section-','');
+      if(sections.indexOf(hash) >= 0) active = hash;
+    }catch(e){}
+    var anyVisible = sections.some(function(s){
+      var el = byId('section-' + s);
+      if(!el) return false;
+      return el.classList.contains('dh-visible-section') || el.classList.contains('dh-active-section');
+    });
+    if(!anyVisible) showOnly(active);
+  }
+
+  window.addEventListener('error', function(e){
+    console.warn('[DocsHelper v6] JS error caught:', e.message || e.error || e);
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    console.warn('[DocsHelper v6] Promise rejection caught:', e.reason || e);
+  });
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  window.addEventListener('load', boot);
+  window.addEventListener('resize', prepareAppLayout);
+  setTimeout(boot, 100);
+  setTimeout(boot, 700);
+  setTimeout(boot, 1600);
 })();
 </script>
 
