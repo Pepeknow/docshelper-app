@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#6366f1">
 <title>DocsHelper — Stable Version</title>
-<script src="https://telegram.org/js/telegram-widget.js?22" async></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 // ── Secret Admin MVP ──
 const ADMIN_PASSWORD = 'TocHem183';
@@ -3624,6 +3624,19 @@ button{
   }
 }
 </style>
+
+<style id="dh-telegram-miniapp-auth-fix">
+body.dh-telegram-webapp #auth-screen{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+body.dh-telegram-webapp #app{
+  display:flex!important;
+  visibility:visible!important;
+}
+</style>
+
 </head>
 <body>
 
@@ -4780,6 +4793,12 @@ function saveSession(t, uid, name, emailVerified = false, email = '') {
 }
 
 function logout() {
+  // В Telegram mini-app обычный экран email-входа не нужен: пользователь уже авторизован Telegram.
+  if (typeof isTelegramMiniAppContext === 'function' && isTelegramMiniAppContext()) {
+    initTelegramMiniAppSession();
+    return;
+  }
+
   localStorage.removeItem('dh_web_token');
   localStorage.removeItem('dh_web_uid');
   localStorage.removeItem('dh_web_name');
@@ -5107,13 +5126,84 @@ initStyle();
 
 function openBot(cmd) { window.open('https://t.me/DocsHelperAI_bot?start=' + cmd, '_blank'); }
 
-// ── Boot ──
-if (token && userId) {
-  initApp(localStorage.getItem('dh_web_name') || 'Пользователь');
-} else {
-  document.getElementById('auth-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
+// ── Telegram Mini App Auth Fix ──
+function isTelegramMiniAppContext() {
+  try {
+    if (window.Telegram && window.Telegram.WebApp) return true;
+    if (String(location.href || '').includes('tgWebApp')) return true;
+    if (/Telegram/i.test(navigator.userAgent || '')) return true;
+  } catch(e) {}
+  return false;
 }
+
+function getTelegramMiniAppUser() {
+  try {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) return null;
+    try { tg.ready && tg.ready(); } catch(e) {}
+    try { tg.expand && tg.expand(); } catch(e) {}
+    return (tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
+  } catch(e) {
+    return null;
+  }
+}
+
+function initTelegramMiniAppSession() {
+  document.body.classList.add('dh-telegram-webapp');
+
+  const user = getTelegramMiniAppUser() || {};
+  let guestId = localStorage.getItem('dh_tg_guest_id');
+  if (!guestId) {
+    guestId = 'tg-guest-' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('dh_tg_guest_id', guestId);
+  }
+
+  const tgId = user.id ? String(user.id) : guestId;
+  const displayName = user.username
+    ? '@' + user.username
+    : [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Telegram user';
+  const pseudoEmail = 'telegram_' + tgId + '@docshelper.local';
+
+  token = 'telegram-miniapp-token-' + tgId;
+  userId = 'telegram-' + tgId;
+
+  localStorage.setItem('dh_web_token', token);
+  localStorage.setItem('dh_web_uid', userId);
+  localStorage.setItem('dh_web_name', displayName);
+  localStorage.setItem('dh_web_email', pseudoEmail);
+  localStorage.setItem('dh_email_verified_current', '1');
+  localStorage.setItem('dh_telegram_miniapp', '1');
+
+  const auth = document.getElementById('auth-screen');
+  const app = document.getElementById('app');
+  if (auth) auth.style.setProperty('display', 'none', 'important');
+  if (app) app.style.setProperty('display', 'flex', 'important');
+
+  initApp(displayName);
+  if (typeof showSection === 'function') setTimeout(() => showSection('chat'), 80);
+  return true;
+}
+
+function bootDocsHelperAuth() {
+  if (isTelegramMiniAppContext()) {
+    initTelegramMiniAppSession();
+    // На некоторых телефонах Telegram WebApp-объект появляется с задержкой.
+    [250, 700, 1500].forEach(ms => setTimeout(() => {
+      if (isTelegramMiniAppContext()) initTelegramMiniAppSession();
+    }, ms));
+    return;
+  }
+
+  if (token && userId) {
+    initApp(localStorage.getItem('dh_web_name') || 'Пользователь');
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+}
+
+// ── Boot ──
+bootDocsHelperAuth();
 
 
 // ── Document Tools ──
@@ -6458,6 +6548,1274 @@ body{display:block !important;}
   setTimeout(bootReferralRaffle, 300);
   setTimeout(bootReferralRaffle, 1200);
 })();</script>
+
+
+
+<!-- ─────────────────────────────────────────────
+     DocsHelper v11 Telegram Mini App Stability Patch
+     Fixes: Telegram auth bypass, floating/overlapping layout,
+     section router, Formula Pad overlap, mobile safe area.
+     ───────────────────────────────────────────── -->
+<style id="dh-v11-telegram-stability-css">
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  body.dh-telegram-miniapp {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    height: var(--dh-tg-height, 100dvh) !important;
+    min-height: var(--dh-tg-height, 100dvh) !important;
+    overflow: hidden !important;
+    display: block !important;
+    background: linear-gradient(145deg, #d8f4ff 0%, #eef2ff 48%, #f5e8ff 100%) !important;
+  }
+
+  body.dh-telegram-miniapp #auth-screen,
+  body.dh-telegram-miniapp .auth-screen,
+  body.dh-telegram-miniapp .auth-box {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  body.dh-telegram-miniapp #dvd-bg,
+  body.dh-telegram-miniapp .dvd-logo {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  body.dh-telegram-miniapp #app {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: var(--dh-tg-height, 100dvh) !important;
+    min-height: var(--dh-tg-height, 100dvh) !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  body.dh-telegram-miniapp .sidebar {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 176px !important;
+    overflow: hidden !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,.55) !important;
+    background: rgba(255,255,255,.64) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  body.dh-telegram-miniapp .sidebar-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: calc(8px + env(safe-area-inset-top)) 10px 7px !important;
+    border-bottom: none !important;
+  }
+
+  body.dh-telegram-miniapp .sidebar-logo-name {
+    display: block !important;
+    font-size: 17px !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+
+  body.dh-telegram-miniapp .sidebar-section,
+  body.dh-telegram-miniapp .style-picker,
+  body.dh-telegram-miniapp .chat-list,
+  body.dh-telegram-miniapp .input-hint {
+    display: none !important;
+  }
+
+  body.dh-telegram-miniapp .new-chat-btn {
+    display: block !important;
+    width: calc(100% - 20px) !important;
+    margin: 7px 10px 8px !important;
+    padding: 11px 12px !important;
+    border-radius: 15px !important;
+  }
+
+  body.dh-telegram-miniapp .sidebar-nav {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 0 8px 9px !important;
+  }
+
+  body.dh-telegram-miniapp .sidebar-nav::-webkit-scrollbar { display: none !important; }
+
+  body.dh-telegram-miniapp .nav-link {
+    flex: 0 0 auto !important;
+    min-width: 76px !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 9px 10px !important;
+    border-radius: 15px !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+  }
+
+  body.dh-telegram-miniapp .main {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  body.dh-telegram-miniapp .main-header {
+    flex: 0 0 auto !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    background: rgba(255,255,255,.52) !important;
+  }
+
+  body.dh-telegram-miniapp .main-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    flex-basis: auto !important;
+    font-size: 16px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.dh-telegram-miniapp .model-select {
+    flex: 0 0 132px !important;
+    width: 132px !important;
+    max-width: 44vw !important;
+    padding: 8px !important;
+    font-size: 12px !important;
+    border-radius: 13px !important;
+  }
+
+  body.dh-telegram-miniapp [id^="section-"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  body.dh-telegram-miniapp [id^="section-"]:not(.active) {
+    display: none !important;
+  }
+
+  body.dh-telegram-miniapp #section-chat.active {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  body.dh-telegram-miniapp #section-files.active,
+  body.dh-telegram-miniapp #section-docs.active,
+  body.dh-telegram-miniapp #section-engineer.active,
+  body.dh-telegram-miniapp #section-sub.active,
+  body.dh-telegram-miniapp #section-raffle.active,
+  body.dh-telegram-miniapp #section-admin.active,
+  body.dh-telegram-miniapp #section-owner.active {
+    display: block !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 14px 10px calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+
+  body.dh-telegram-miniapp .chat-area {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 12px 10px 14px !important;
+  }
+
+  body.dh-telegram-miniapp .input-area {
+    flex: 0 0 auto !important;
+    padding: 8px 9px calc(8px + env(safe-area-inset-bottom)) !important;
+    background: rgba(255,255,255,.66) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+
+  body.dh-telegram-miniapp .input-wrap {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+  }
+
+  body.dh-telegram-miniapp .welcome {
+    padding: 18px 0 26px !important;
+    max-width: 100% !important;
+  }
+
+  body.dh-telegram-miniapp .quick-btns,
+  body.dh-telegram-miniapp .plan-grid,
+  body.dh-telegram-miniapp .engineering-tools-grid,
+  body.dh-telegram-miniapp .engineering-mini-grid,
+  body.dh-telegram-miniapp .doc-tools-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.dh-telegram-miniapp .section-card,
+  body.dh-telegram-miniapp .plan-card,
+  body.dh-telegram-miniapp .quick-btn,
+  body.dh-telegram-miniapp .engineering-card,
+  body.dh-telegram-miniapp .formula-pad {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  body.dh-telegram-miniapp .formula-pad {
+    display: block !important;
+    position: relative !important;
+    padding: 15px !important;
+    border-radius: 22px !important;
+  }
+
+  body.dh-telegram-miniapp .formula-pad-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  body.dh-telegram-miniapp .formula-mode-badge {
+    align-self: flex-start !important;
+    max-width: 100% !important;
+  }
+
+  body.dh-telegram-miniapp .formula-math-field,
+  body.dh-telegram-miniapp math-field.formula-math-field,
+  body.dh-telegram-miniapp math-field {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 54px !important;
+    height: auto !important;
+    clear: both !important;
+    margin: 0 0 12px 0 !important;
+    position: relative !important;
+    z-index: 1 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  body.dh-telegram-miniapp .formula-input,
+  body.dh-telegram-miniapp textarea.formula-input {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 156px !important;
+    clear: both !important;
+    margin: 12px 0 0 0 !important;
+    position: relative !important;
+    z-index: 0 !important;
+    box-sizing: border-box !important;
+    resize: vertical !important;
+  }
+
+  body.dh-telegram-miniapp .formula-template-row {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px !important;
+  }
+
+  body.dh-telegram-miniapp .formula-chip { flex: 0 0 auto !important; }
+  body.dh-telegram-miniapp .formula-actions { grid-template-columns: 1fr 1fr !important; }
+
+  body.dh-telegram-miniapp #owner-secret-entry {
+    display: block !important;
+    visibility: visible !important;
+    opacity: .78 !important;
+    position: fixed !important;
+    right: 10px !important;
+    bottom: calc(9px + env(safe-area-inset-bottom)) !important;
+    z-index: 2147483647 !important;
+    width: 34px !important;
+    height: 24px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+  }
+
+  body.dh-telegram-miniapp * {
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+<script id="dh-v11-telegram-stability-js">
+(function(){
+  'use strict';
+
+  function isTelegramMiniApp(){
+    return !!(window.Telegram && window.Telegram.WebApp);
+  }
+
+  function tgUser(){
+    try { return (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) || null; }
+    catch(e){ return null; }
+  }
+
+  function setTelegramHeight(){
+    var h = 0;
+    try {
+      if(window.Telegram && window.Telegram.WebApp){
+        h = window.Telegram.WebApp.viewportStableHeight || window.Telegram.WebApp.viewportHeight || 0;
+      }
+    } catch(e) {}
+    if(!h) h = window.innerHeight || document.documentElement.clientHeight || 0;
+    if(h) document.documentElement.style.setProperty('--dh-tg-height', h + 'px');
+  }
+
+  function hideAuthForTelegram(){
+    if(!isTelegramMiniApp()) return;
+    document.body.classList.add('dh-telegram-miniapp');
+    var auth = document.getElementById('auth-screen');
+    if(auth){
+      auth.style.setProperty('display','none','important');
+      auth.style.setProperty('visibility','hidden','important');
+      auth.style.setProperty('opacity','0','important');
+      auth.style.setProperty('pointer-events','none','important');
+    }
+    var app = document.getElementById('app');
+    if(app){
+      app.style.setProperty('display','flex','important');
+    }
+  }
+
+  function ensureTelegramSession(){
+    if(!isTelegramMiniApp()) return;
+    var u = tgUser();
+    var name = 'Telegram User';
+    var id = 'telegram_user';
+    if(u){
+      name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || ('Telegram ' + u.id);
+      id = u.username ? ('@' + u.username) : ('tg_' + u.id);
+    }
+    try {
+      localStorage.setItem('dh_is_logged','1');
+      localStorage.setItem('dh_web_name', name);
+      localStorage.setItem('dh_web_email', id);
+      localStorage.setItem('dh_email_verified_current','1');
+      if(!localStorage.getItem('dh_web_plan')) localStorage.setItem('dh_web_plan','telegram');
+    } catch(e) {}
+  }
+
+  function normalizeSections(){
+    var sections = Array.prototype.slice.call(document.querySelectorAll('[id^="section-"]'));
+    if(!sections.length) return;
+    var active = document.querySelector('[id^="section-"].active');
+    if(!active) active = document.getElementById('section-chat') || sections[0];
+    sections.forEach(function(sec){
+      if(sec === active){
+        sec.classList.add('active');
+        sec.style.setProperty('display', sec.id === 'section-chat' ? 'flex' : 'block', 'important');
+      } else {
+        sec.classList.remove('active');
+        sec.style.setProperty('display','none','important');
+      }
+    });
+  }
+
+  function installSectionRouter(){
+    var oldShow = window.showSection;
+    window.showSection = function(section){
+      var id = section && section.indexOf('section-') === 0 ? section : 'section-' + section;
+      var target = document.getElementById(id);
+      if(!target && typeof oldShow === 'function') return oldShow(section);
+      Array.prototype.slice.call(document.querySelectorAll('[id^="section-"]')).forEach(function(sec){
+        var on = sec === target;
+        sec.classList.toggle('active', on);
+        sec.style.setProperty('display', on ? (sec.id === 'section-chat' ? 'flex' : 'block') : 'none', 'important');
+      });
+      Array.prototype.slice.call(document.querySelectorAll('.nav-link')).forEach(function(link){
+        var onclick = String(link.getAttribute('onclick') || '');
+        link.classList.toggle('active', onclick.indexOf(section) !== -1 || onclick.indexOf(id.replace('section-','')) !== -1);
+      });
+      try { if(typeof hardFixDocsHelperLayout === 'function') setTimeout(hardFixDocsHelperLayout, 0); } catch(e) {}
+    };
+  }
+
+  function ensureOwnerButton(){
+    var btn = document.getElementById('owner-secret-entry');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'owner-secret-entry';
+      btn.type = 'button';
+      btn.textContent = 'v1';
+      btn.setAttribute('aria-label','Owner cabinet');
+      document.body.appendChild(btn);
+    }
+    btn.onclick = function(ev){
+      ev.preventDefault();
+      if(typeof window.openOwnerSecret === 'function') window.openOwnerSecret();
+      else if(typeof window.showSection === 'function') window.showSection('admin');
+      return false;
+    };
+  }
+
+  function initTelegramWebApp(){
+    if(!isTelegramMiniApp()) return;
+    try {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      window.Telegram.WebApp.disableVerticalSwipes && window.Telegram.WebApp.disableVerticalSwipes();
+    } catch(e) {}
+  }
+
+  function applyAll(){
+    setTelegramHeight();
+    hideAuthForTelegram();
+    ensureTelegramSession();
+    installSectionRouter();
+    normalizeSections();
+    ensureOwnerButton();
+    initTelegramWebApp();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyAll);
+  else applyAll();
+
+  window.addEventListener('resize', function(){ setTelegramHeight(); normalizeSections(); });
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ setTelegramHeight(); normalizeSections(); }, 250); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) setTimeout(applyAll, 80); });
+  setTimeout(applyAll, 120);
+  setTimeout(applyAll, 800);
+  setTimeout(applyAll, 1800);
+})();
+</script>
+
+
+<!-- ─────────────────────────────────────────────
+     DocsHelper v12 ABSOLUTE TELEGRAM UI PATCH
+     Purpose: stable Telegram Mini App layout, no web auth inside TG,
+     no section mixing, restored owner button, safe mobile viewport.
+     Keep this patch immediately before </body>.
+     ───────────────────────────────────────────── -->
+<style id="dh-v12-absolute-telegram-css">
+  html, body { width:100% !important; max-width:100% !important; overflow-x:hidden !important; }
+  body.dh-tg, body.dh-telegram-miniapp {
+    margin:0 !important; padding:0 !important; width:100vw !important;
+    min-width:0 !important; height:var(--dh-app-height, 100dvh) !important;
+    min-height:var(--dh-app-height, 100dvh) !important; overflow:hidden !important;
+    display:block !important; overscroll-behavior:none !important;
+    background:linear-gradient(145deg,#d8f4ff 0%,#eef2ff 50%,#f5e8ff 100%) !important;
+  }
+  body.dh-tg #auth-screen, body.dh-tg .auth-box,
+  body.dh-telegram-miniapp #auth-screen, body.dh-telegram-miniapp .auth-box {
+    display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important;
+  }
+  body.dh-tg #dvd-bg, body.dh-tg .dvd-logo,
+  body.dh-telegram-miniapp #dvd-bg, body.dh-telegram-miniapp .dvd-logo {
+    display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important;
+  }
+  body.dh-tg #app, body.dh-telegram-miniapp #app {
+    display:flex !important; flex-direction:column !important; width:100vw !important; max-width:100vw !important;
+    height:var(--dh-app-height, 100dvh) !important; min-height:0 !important; overflow:hidden !important;
+    position:relative !important; z-index:1 !important;
+  }
+  body.dh-tg .sidebar, body.dh-telegram-miniapp .sidebar {
+    flex:0 0 auto !important; width:100% !important; max-width:100% !important; height:auto !important;
+    max-height:166px !important; overflow:hidden !important; border-right:none !important;
+    border-bottom:1px solid rgba(255,255,255,.55) !important; background:rgba(255,255,255,.72) !important;
+    backdrop-filter:blur(20px) !important; -webkit-backdrop-filter:blur(20px) !important;
+  }
+  body.dh-tg .sidebar-header, body.dh-telegram-miniapp .sidebar-header {
+    padding:8px 10px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; gap:8px !important;
+  }
+  body.dh-tg .sidebar-logo-name, body.dh-telegram-miniapp .sidebar-logo-name { font-size:17px !important; white-space:nowrap !important; }
+  body.dh-tg .user-badge, body.dh-telegram-miniapp .user-badge { max-width:145px !important; padding:6px 8px !important; border-radius:14px !important; }
+  body.dh-tg .style-picker, body.dh-tg .sidebar-section, body.dh-tg .chat-list,
+  body.dh-telegram-miniapp .style-picker, body.dh-telegram-miniapp .sidebar-section, body.dh-telegram-miniapp .chat-list { display:none !important; }
+  body.dh-tg .new-chat-btn, body.dh-telegram-miniapp .new-chat-btn {
+    margin:7px 10px !important; width:calc(100% - 20px) !important; padding:11px 12px !important; border-radius:15px !important;
+  }
+  body.dh-tg .sidebar-nav, body.dh-telegram-miniapp .sidebar-nav {
+    display:flex !important; gap:7px !important; overflow-x:auto !important; overflow-y:hidden !important;
+    padding:0 8px 8px !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important;
+  }
+  body.dh-tg .sidebar-nav::-webkit-scrollbar, body.dh-telegram-miniapp .sidebar-nav::-webkit-scrollbar { display:none !important; }
+  body.dh-tg .nav-link, body.dh-telegram-miniapp .nav-link {
+    flex:0 0 auto !important; min-width:78px !important; justify-content:center !important; white-space:nowrap !important;
+    margin:0 !important; padding:9px 10px !important; border-radius:15px !important; font-size:12px !important;
+    background:rgba(255,255,255,.44) !important;
+  }
+  body.dh-tg .nav-link.active, body.dh-telegram-miniapp .nav-link.active { background:rgba(255,255,255,.9) !important; color:var(--accent) !important; }
+  body.dh-tg .main, body.dh-telegram-miniapp .main {
+    flex:1 1 auto !important; min-height:0 !important; width:100% !important; max-width:100% !important; overflow:hidden !important;
+    display:flex !important; flex-direction:column !important;
+  }
+  body.dh-tg .main-header, body.dh-telegram-miniapp .main-header { flex:0 0 auto !important; padding:8px 10px !important; gap:8px !important; }
+  body.dh-tg .main-title, body.dh-telegram-miniapp .main-title { min-width:0 !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; }
+  body.dh-tg .model-select, body.dh-telegram-miniapp .model-select { width:132px !important; max-width:42vw !important; font-size:12px !important; }
+  body.dh-tg [id^="section-"], body.dh-telegram-miniapp [id^="section-"] {
+    flex:1 1 auto !important; min-height:0 !important; max-width:100% !important; overflow-y:auto !important; overflow-x:hidden !important;
+    -webkit-overflow-scrolling:touch !important; padding-bottom:88px !important;
+  }
+  body.dh-tg #section-chat, body.dh-telegram-miniapp #section-chat {
+    display:flex !important; flex-direction:column !important; padding:0 !important; overflow:hidden !important;
+  }
+  body.dh-tg #section-chat:not(.active), body.dh-telegram-miniapp #section-chat:not(.active) { display:none !important; }
+  body.dh-tg [id^="section-"]:not(.active), body.dh-telegram-miniapp [id^="section-"]:not(.active) { display:none !important; }
+  body.dh-tg #section-chat.active, body.dh-telegram-miniapp #section-chat.active { display:flex !important; }
+  body.dh-tg [id^="section-"].active:not(#section-chat), body.dh-telegram-miniapp [id^="section-"].active:not(#section-chat) { display:block !important; }
+  body.dh-tg .chat-area, body.dh-telegram-miniapp .chat-area { flex:1 1 auto !important; min-height:0 !important; overflow-y:auto !important; padding:12px 10px !important; }
+  body.dh-tg .input-area, body.dh-telegram-miniapp .input-area {
+    flex:0 0 auto !important; padding:8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    background:rgba(255,255,255,.72) !important; backdrop-filter:blur(20px) !important; -webkit-backdrop-filter:blur(20px) !important;
+  }
+  body.dh-tg .input-wrap, body.dh-telegram-miniapp .input-wrap { max-width:100% !important; margin:0 !important; border-radius:18px !important; }
+  body.dh-tg .formula-pad, body.dh-telegram-miniapp .formula-pad { overflow:visible !important; }
+  body.dh-tg .formula-math-field, body.dh-telegram-miniapp .formula-math-field,
+  body.dh-tg math-field, body.dh-telegram-miniapp math-field {
+    display:block !important; position:relative !important; width:100% !important; min-height:62px !important;
+    margin:0 0 14px 0 !important; z-index:1 !important; overflow:hidden !important;
+  }
+  body.dh-tg .formula-input, body.dh-telegram-miniapp .formula-input { display:block !important; width:100% !important; min-height:170px !important; clear:both !important; position:relative !important; z-index:2 !important; }
+  #owner-secret-entry {
+    position:fixed !important; right:10px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important;
+    width:36px !important; height:28px !important; z-index:2147483647 !important; display:block !important;
+    border:none !important; border-radius:999px !important; background:rgba(15,23,42,.75) !important; color:#fff !important;
+    font-size:11px !important; font-weight:800 !important; opacity:.72 !important;
+  }
+</style>
+<script id="dh-v12-absolute-telegram-js">
+(function(){
+  'use strict';
+  var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  var isTg = !!tg || /Telegram/i.test(navigator.userAgent || '') || new URLSearchParams(location.search).has('tgWebAppData');
+  var sectionMap = {
+    chat:'Чат', files:'Файлы', docs:'Документы', engineer:'Инженер', sub:'Подписка', raffle:'Розыгрыш', admin:'Админ'
+  };
+  function $(id){ return document.getElementById(id); }
+  function setHeight(){
+    var h = (tg && (tg.viewportStableHeight || tg.viewportHeight)) || window.innerHeight || document.documentElement.clientHeight || 700;
+    document.documentElement.style.setProperty('--dh-app-height', Math.max(520, Math.floor(h)) + 'px');
+  }
+  function telegramBoot(){
+    if(!isTg) return;
+    document.body.classList.add('dh-tg','dh-telegram-miniapp');
+    try { tg.ready(); tg.expand(); tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch(e) {}
+    var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+    if(u){
+      localStorage.setItem('dh_web_logged','1');
+      localStorage.setItem('dh_web_name', u.username ? '@'+u.username : ((u.first_name || 'Telegram') + (u.last_name ? ' '+u.last_name : '')));
+      localStorage.setItem('dh_web_email', 'tg_' + u.id + '@telegram.local');
+      localStorage.setItem('dh_tg_user_id', String(u.id));
+      if(!localStorage.getItem('dh_web_plan')) localStorage.setItem('dh_web_plan','trial');
+    } else {
+      localStorage.setItem('dh_web_logged','1');
+      localStorage.setItem('dh_web_name', localStorage.getItem('dh_web_name') || 'Telegram User');
+      if(!localStorage.getItem('dh_web_plan')) localStorage.setItem('dh_web_plan','trial');
+    }
+    var auth = $('auth-screen'); if(auth) auth.remove();
+    var app = $('app'); if(app) app.style.display = 'flex';
+  }
+  function ensureOwnerButton(){
+    var btn = $('owner-secret-entry');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'owner-secret-entry';
+      btn.type = 'button';
+      btn.textContent = 'v1';
+      document.body.appendChild(btn);
+    }
+    btn.textContent = 'v1';
+    btn.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); if(typeof window.openOwnerSecret === 'function') window.openOwnerSecret(); else safeShowSection('admin'); };
+  }
+  function safeShowSection(name){
+    name = String(name || 'chat').replace(/^section-/,'');
+    var target = $('section-' + name) || $('section-chat');
+    if(!target) return;
+    document.querySelectorAll('[id^="section-"]').forEach(function(sec){
+      sec.classList.remove('active');
+      sec.style.display = 'none';
+    });
+    target.classList.add('active');
+    target.style.display = target.id === 'section-chat' ? 'flex' : 'block';
+    document.querySelectorAll('.nav-link').forEach(function(n){ n.classList.remove('active'); });
+    document.querySelectorAll('.nav-link').forEach(function(n){
+      var txt = (n.textContent || '').toLowerCase();
+      var on = String(n.getAttribute('onclick') || '').toLowerCase();
+      if(on.indexOf(name.toLowerCase()) !== -1 || txt.indexOf((sectionMap[name] || '').toLowerCase()) !== -1) n.classList.add('active');
+    });
+    try { target.scrollTop = 0; } catch(e) {}
+  }
+  function wireNav(){
+    document.querySelectorAll('.nav-link').forEach(function(link){
+      if(link.__dhV12Wired) return;
+      link.__dhV12Wired = true;
+      link.addEventListener('click', function(ev){
+        var on = String(link.getAttribute('onclick') || '');
+        var text = (link.textContent || '').toLowerCase();
+        var name = null;
+        Object.keys(sectionMap).forEach(function(k){
+          if(on.indexOf("'"+k+"'") !== -1 || on.indexOf('"'+k+'"') !== -1 || text.indexOf(sectionMap[k].toLowerCase()) !== -1) name = k;
+        });
+        if(name){ ev.preventDefault(); ev.stopPropagation(); safeShowSection(name); }
+      }, true);
+    });
+  }
+  function repair(){
+    setHeight(); telegramBoot(); ensureOwnerButton(); wireNav();
+    var hasActive = document.querySelector('[id^="section-"].active');
+    if(!hasActive) safeShowSection('chat');
+    document.querySelectorAll('input, textarea, select').forEach(function(el){ el.style.maxWidth = '100%'; });
+  }
+  var oldShow = window.showSection;
+  window.showSection = function(name){
+    if(name === 'admin' && typeof oldShow === 'function') { try { oldShow(name); } catch(e){} }
+    safeShowSection(name);
+    return false;
+  };
+  window.addEventListener('resize', repair);
+  if(tg) tg.onEvent && tg.onEvent('viewportChanged', repair);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', repair); else repair();
+  window.addEventListener('load', repair);
+  setTimeout(repair, 100); setTimeout(repair, 600); setTimeout(repair, 1500); setInterval(repair, 3500);
+})();
+</script>
+
+
+<!-- DocsHelper Telegram Stability Patch v14 -->
+<style id="dh-tg-stability-v14">
+  html.dh-tg-miniapp,
+  body.dh-tg-miniapp {
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    background: linear-gradient(145deg,#dff7ff 0%,#eef2ff 48%,#f6e8ff 100%) !important;
+  }
+
+  body.dh-tg-miniapp #auth-screen {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.dh-tg-miniapp #app {
+    display: flex !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+    background: transparent !important;
+  }
+
+  body.dh-tg-miniapp .sidebar {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-height: 190px !important;
+    overflow: hidden !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.55) !important;
+    background: rgba(255,255,255,.62) !important;
+    backdrop-filter: blur(22px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+  }
+
+  body.dh-tg-miniapp .main {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body.dh-tg-miniapp .main-header {
+    flex: 0 0 auto !important;
+    padding: 10px 12px !important;
+    background: rgba(255,255,255,.45) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+  }
+
+  body.dh-tg-miniapp .chat-area,
+  body.dh-tg-miniapp [id^="section-"] {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+
+  body.dh-tg-miniapp #section-chat.active,
+  body.dh-tg-miniapp #section-chat.dh-active-section {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  body.dh-tg-miniapp [id^="section-"]:not(.dh-active-section):not(.active) {
+    display: none !important;
+  }
+
+  body.dh-tg-miniapp .input-area {
+    flex: 0 0 auto !important;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    background: rgba(255,255,255,.62) !important;
+    backdrop-filter: blur(22px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+  }
+
+  body.dh-tg-miniapp .input-wrap {
+    max-width: 100% !important;
+    border-radius: 18px !important;
+  }
+
+  body.dh-tg-miniapp .formula-math-field,
+  body.dh-tg-miniapp math-field,
+  body.dh-tg-miniapp .formula-input {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    position: relative !important;
+    clear: both !important;
+    margin: 0 0 12px 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  body.dh-tg-miniapp textarea.formula-input,
+  body.dh-tg-miniapp .formula-input {
+    min-height: 150px !important;
+    resize: vertical !important;
+  }
+
+  #owner-secret-entry {
+    position: fixed !important;
+    right: 10px !important;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    z-index: 2147483647 !important;
+    display: block !important;
+    opacity: .78 !important;
+  }
+</style>
+
+<script id="dh-tg-stability-v14">
+(function(){
+  'use strict';
+
+  var DEFAULT_NAME = 'Telegram User';
+  var SECTION_ALIASES = {
+    chat: 'chat',
+    app: 'chat',
+    home: 'chat',
+    files: 'files',
+    docs: 'docs',
+    documents: 'docs',
+    engineer: 'engineer',
+    engineering: 'engineer',
+    sub: 'sub',
+    subscribe: 'sub',
+    subscription: 'sub',
+    raffle: 'raffle',
+    draw: 'raffle',
+    konkurs: 'raffle',
+    contest: 'raffle',
+    admin: 'admin'
+  };
+
+  function isTelegram(){
+    return !!(window.Telegram && window.Telegram.WebApp);
+  }
+
+  function safeSet(key, value){
+    try { localStorage.setItem(key, String(value)); } catch(e) {}
+  }
+
+  function safeGet(key, fallback){
+    try { return localStorage.getItem(key) || fallback; } catch(e) { return fallback; }
+  }
+
+  function activateTelegramMode(){
+    if(!isTelegram()) return;
+
+    var tg = window.Telegram.WebApp;
+    try { tg.ready(); } catch(e) {}
+    try { tg.expand(); } catch(e) {}
+    try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch(e) {}
+
+    document.documentElement.classList.add('dh-tg-miniapp');
+    document.body.classList.add('dh-tg-miniapp');
+
+    var user = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : {};
+    var name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || DEFAULT_NAME;
+    var id = user.id || ('guest_' + Math.random().toString(36).slice(2,8));
+
+    safeSet('dh_logged_in', '1');
+    safeSet('dh_web_auth', '1');
+    safeSet('dh_email_verified_current', '1');
+    safeSet('dh_web_name', name);
+    safeSet('dh_web_email', 'tg_' + id);
+    safeSet('dh_tg_user_id', id);
+
+    var auth = document.getElementById('auth-screen');
+    var app = document.getElementById('app');
+    if(auth) auth.style.setProperty('display','none','important');
+    if(app) app.style.setProperty('display','flex','important');
+
+    updateUserBadge(name);
+  }
+
+  function updateUserBadge(name){
+    var nameEl = document.querySelector('.user-badge-name');
+    if(nameEl) nameEl.textContent = name || safeGet('dh_web_name', DEFAULT_NAME);
+
+    var avatar = document.querySelector('.user-badge-avatar');
+    if(avatar) avatar.textContent = (name || DEFAULT_NAME).trim().charAt(0).toUpperCase();
+  }
+
+  function ensureOwnerButton(){
+    var btn = document.getElementById('owner-secret-entry');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'owner-secret-entry';
+      btn.type = 'button';
+      btn.textContent = 'v1';
+      btn.setAttribute('aria-label','Owner cabinet');
+      btn.style.cssText = 'position:fixed;right:10px;bottom:10px;z-index:2147483647;border:0;border-radius:999px;padding:7px 10px;background:rgba(99,102,241,.88);color:#fff;font-weight:800;font-size:12px;box-shadow:0 10px 24px rgba(0,0,0,.18);';
+      document.body.appendChild(btn);
+    }
+    btn.onclick = function(ev){
+      ev.preventDefault();
+      showSectionHard('admin');
+    };
+  }
+
+  function ensureRaffleSection(){
+    if(document.getElementById('section-raffle')) return;
+
+    var main = document.querySelector('.main') || document.body;
+    var sec = document.createElement('section');
+    sec.id = 'section-raffle';
+    sec.style.display = 'none';
+    sec.innerHTML = '<div style="max-width:900px;margin:0 auto;padding:24px 16px 96px;">' +
+      '<h2 class="section-title">🎁 Розыгрыш</h2>' +
+      '<div class="section-card" style="border-radius:22px;">' +
+      '<h3 class="section-card-title">Реферальная программа</h3>' +
+      '<p class="section-card-desc">Приглашай друзей по ссылке. За каждого приглашённого начисляется 1000 DocsCoin, а раздел розыгрыша открывается и пригласителю, и приглашённому.</p>' +
+      '<input id="dh-ref-link-v14" readonly style="width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--border,#ddd);margin:10px 0;background:var(--bg-secondary,#f6f7fb);color:var(--text-primary,#111);" />' +
+      '<button class="auth-btn" type="button" id="dh-copy-ref-v14">Скопировать реф-ссылку</button>' +
+      '<div id="dh-ref-stats-v14" style="margin-top:12px;color:var(--text-secondary,#666);font-size:14px;"></div>' +
+      '</div></div>';
+    main.appendChild(sec);
+  }
+
+  function updateReferral(){
+    var input = document.getElementById('dh-ref-link-v14');
+    var stats = document.getElementById('dh-ref-stats-v14');
+    if(!input && !stats) return;
+
+    var code = safeGet('dh_ref_code', '');
+    if(!code){
+      code = safeGet('dh_tg_user_id', '') || safeGet('dh_web_email','guest').replace(/[^a-zA-Z0-9_]/g,'_');
+      safeSet('dh_ref_code', code);
+    }
+
+    var base = location.origin + location.pathname;
+    var link = base + '?ref=' + encodeURIComponent(code) + '&section=raffle';
+    if(input) input.value = link;
+
+    var invited = Number(safeGet('dh_ref_invited_count','0') || 0);
+    var earned = invited * 1000;
+    var balance = Number(safeGet('dh_docscoin_balance','0') || 0);
+    if(stats) stats.innerHTML = 'Приглашено: <b>' + invited + '</b> · Заработано: <b>' + earned + '</b> DocsCoin · Баланс: <b>' + balance + '</b>';
+
+    var copy = document.getElementById('dh-copy-ref-v14');
+    if(copy){
+      copy.onclick = function(){
+        var text = input ? input.value : link;
+        if(navigator.clipboard) navigator.clipboard.writeText(text);
+        copy.textContent = '✅ Скопировано';
+        setTimeout(function(){ copy.textContent = 'Скопировать реф-ссылку'; }, 1400);
+      };
+    }
+  }
+
+  function applyIncomingRef(){
+    var params = new URLSearchParams(location.search || '');
+    var ref = params.get('ref');
+    if(!ref) return;
+
+    var my = safeGet('dh_ref_code','');
+    if(ref && ref !== my && !safeGet('dh_invited_by','')){
+      safeSet('dh_invited_by', ref);
+      safeSet('dh_raffle_unlocked', '1');
+      safeSet('dh_referral_guest_unlocked', '1');
+    }
+  }
+
+  function normalizeSection(name){
+    name = String(name || '').replace('#','').trim().toLowerCase();
+    return SECTION_ALIASES[name] || name || 'chat';
+  }
+
+  function showSectionHard(name){
+    name = normalizeSection(name);
+    if(name === 'raffle') ensureRaffleSection();
+
+    var targetId = 'section-' + name;
+    var target = document.getElementById(targetId);
+    if(!target && name === 'chat') target = document.getElementById('section-chat');
+    if(!target) target = document.getElementById('section-chat');
+
+    document.querySelectorAll('[id^="section-"]').forEach(function(sec){
+      sec.classList.remove('active','dh-active-section');
+      sec.style.setProperty('display','none','important');
+    });
+
+    if(target){
+      target.classList.add('active','dh-active-section');
+      var display = target.id === 'section-chat' ? 'flex' : 'block';
+      target.style.setProperty('display', display, 'important');
+    }
+
+    document.querySelectorAll('.nav-link').forEach(function(link){
+      link.classList.remove('active');
+      var txt = (link.textContent || '').toLowerCase();
+      if((name === 'sub' && txt.indexOf('подпис') >= 0) ||
+         (name === 'raffle' && (txt.indexOf('розыг') >= 0 || txt.indexOf('конкурс') >= 0)) ||
+         (name === 'engineer' && txt.indexOf('инжен') >= 0) ||
+         (name === 'docs' && txt.indexOf('док') >= 0) ||
+         (name === 'files' && txt.indexOf('файл') >= 0) ||
+         (name === 'chat' && txt.indexOf('чат') >= 0)){
+        link.classList.add('active');
+      }
+    });
+
+    var title = document.querySelector('.main-title');
+    if(title){
+      var titles = {chat:'Новый чат',files:'Работа с файлами',docs:'Документы',engineer:'Инженер',sub:'Подписка',raffle:'Розыгрыш',admin:'Кабинет владельца'};
+      title.textContent = titles[name] || title.textContent;
+    }
+
+    updateReferral();
+
+    try {
+      if(history.replaceState) {
+        var url = new URL(location.href);
+        url.searchParams.set('section', name);
+        history.replaceState(null, '', url.toString());
+      }
+    } catch(e) {}
+  }
+
+  function patchClicks(){
+    document.addEventListener('click', function(ev){
+      var el = ev.target;
+      if(!el) return;
+      var node = el.closest ? el.closest('button,a,.nav-link,.plan-card,.quick-btn') : el;
+      if(!node) return;
+
+      var text = (node.textContent || '').toLowerCase();
+      var attr = ((node.getAttribute && (node.getAttribute('onclick') || node.getAttribute('href') || node.dataset.section || '')) || '').toLowerCase();
+      var all = text + ' ' + attr;
+
+      if(all.indexOf('подпис') >= 0 || all.indexOf('subscription') >= 0 || all.indexOf('section-sub') >= 0){
+        ev.preventDefault();
+        showSectionHard('sub');
+      } else if(all.indexOf('розыг') >= 0 || all.indexOf('конкурс') >= 0 || all.indexOf('raffle') >= 0){
+        ev.preventDefault();
+        showSectionHard('raffle');
+      }
+    }, true);
+  }
+
+  function boot(){
+    activateTelegramMode();
+    ensureOwnerButton();
+    ensureRaffleSection();
+    applyIncomingRef();
+    patchClicks();
+
+    window.showSection = showSectionHard;
+    window.openOwnerSecret = function(){ showSectionHard('admin'); };
+
+    var params = new URLSearchParams(location.search || '');
+    var wanted = params.get('section') || (location.hash || '').replace('#','') || 'chat';
+    showSectionHard(wanted);
+
+    setTimeout(function(){ showSectionHard(wanted); }, 150);
+    setTimeout(function(){ showSectionHard(wanted); }, 800);
+  }
+
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  window.addEventListener('load', function(){
+    if(isTelegram()){
+      try { window.Telegram.WebApp.expand(); } catch(e) {}
+    }
+  });
+})();
+</script>
+<!-- /DocsHelper Telegram Stability Patch v14 -->
+
+
+<!-- DocsHelper Projects/Payments UI Patch v15 -->
+<style id="dh-projects-payments-v15">
+  .dh-projects-grid-v15{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+  .dh-project-card-v15{background:var(--bg-primary,#fff);border:1px solid var(--border,#e5e7eb);border-radius:18px;padding:16px;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+  .dh-project-empty-v15{padding:18px;border-radius:18px;border:1px dashed var(--border,#e5e7eb);color:var(--text-secondary,#666);background:var(--bg-secondary,#f7f8fb)}
+  .dh-pay-note-v15{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(99,102,241,.10);color:var(--text-primary,#111);font-size:14px;line-height:1.45}
+  @media(max-width:768px){.dh-projects-grid-v15{grid-template-columns:1fr}}
+</style>
+<script id="dh-projects-payments-v15">
+(function(){
+  'use strict';
+
+  function safeGet(key, fallback){try{return localStorage.getItem(key)||fallback}catch(e){return fallback}}
+  function safeSet(key, value){try{localStorage.setItem(key,String(value))}catch(e){}}
+
+  function ensureProjectsSectionV15(){
+    if(document.getElementById('section-projects')) return;
+    var main = document.querySelector('.main') || document.body;
+    var sec = document.createElement('section');
+    sec.id = 'section-projects';
+    sec.style.display = 'none';
+    sec.innerHTML =
+      '<div style="max-width:920px;margin:0 auto;padding:24px 16px 96px;">' +
+      '<h2 class="section-title">📁 Мои проекты</h2>' +
+      '<div class="section-card" style="border-radius:22px;">' +
+      '<h3 class="section-card-title">Сохранённые работы</h3>' +
+      '<p class="section-card-desc">Здесь будут документы, расчёты и проекты, созданные в DocsHelper.</p>' +
+      '<div id="dh-projects-list-v15"></div>' +
+      '</div>' +
+      '<div class="section-card" style="border-radius:22px;">' +
+      '<h3 class="section-card-title">💳 Оплата подписки</h3>' +
+      '<p class="section-card-desc">В Telegram оплата создаётся через кнопку бота «Оплатить подписку». На сайте выбери тариф, затем вернись в бот для счёта CryptoBot.</p>' +
+      '<div class="dh-pay-note-v15">Если кнопка оплаты не реагирует в Mini App, нажми в боте команду <b>/pay</b> или кнопку <b>💳 Оплатить подписку</b>.</div>' +
+      '</div>' +
+      '</div>';
+    main.appendChild(sec);
+  }
+
+  function renderProjectsV15(){
+    var box = document.getElementById('dh-projects-list-v15');
+    if(!box) return;
+    var projects = [];
+    try{projects = JSON.parse(localStorage.getItem('dh_projects') || '[]')}catch(e){projects=[]}
+    if(!projects.length){
+      box.innerHTML = '<div class="dh-project-empty-v15">Пока проектов нет. Создай документ или расчёт — здесь появится история работ.</div>';
+      return;
+    }
+    box.innerHTML = '<div class="dh-projects-grid-v15">' + projects.slice(-12).reverse().map(function(p){
+      return '<div class="dh-project-card-v15"><b>' + String(p.title||'Проект').replace(/[<>&]/g,'') + '</b><br><span style="color:var(--text-secondary,#666);font-size:13px">' + String(p.type||'Документ').replace(/[<>&]/g,'') + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  function patchPlanButtonsV15(){
+    document.addEventListener('click', function(ev){
+      var el = ev.target && ev.target.closest ? ev.target.closest('button,.plan-card,a') : null;
+      if(!el) return;
+      var text = (el.textContent || '').toLowerCase();
+      var attr = ((el.getAttribute('onclick') || '') + ' ' + (el.getAttribute('href') || '')).toLowerCase();
+
+      if(text.indexOf('оплат') >= 0 || attr.indexOf('pay') >= 0 || text.indexOf('подпис') >= 0){
+        // Не ломаем существующий selectPlan, но сохраняем выбранный тариф и показываем подсказку.
+        var key = '';
+        var m = attr.match(/selectplan\(['"]([^'"]+)['"]\)/i);
+        if(m) key = m[1];
+        if(key) safeSet('dh_selected_plan', key);
+        setTimeout(function(){
+          var note = document.getElementById('dh-pay-mini-note-v15');
+          if(!note){
+            note = document.createElement('div');
+            note.id = 'dh-pay-mini-note-v15';
+            note.className = 'dh-pay-note-v15';
+            note.innerHTML = 'Для создания счёта CryptoBot нажми в Telegram-боте кнопку <b>💳 Оплатить подписку</b> или команду <b>/pay</b>.';
+            var sub = document.getElementById('section-sub');
+            if(sub) sub.prepend(note);
+          }
+        }, 80);
+      }
+
+      if(text.indexOf('мои проекты') >= 0 || text.indexOf('проекты') >= 0){
+        ev.preventDefault();
+        ensureProjectsSectionV15();
+        if(window.showSection) window.showSection('projects');
+        renderProjectsV15();
+      }
+    }, true);
+  }
+
+  function bootV15(){
+    ensureProjectsSectionV15();
+    renderProjectsV15();
+    patchPlanButtonsV15();
+
+    var oldShow = window.showSection;
+    window.showSection = function(name){
+      if(String(name).toLowerCase() === 'projects'){
+        ensureProjectsSectionV15();
+        document.querySelectorAll('[id^="section-"]').forEach(function(sec){
+          sec.classList.remove('active','dh-active-section');
+          sec.style.setProperty('display','none','important');
+        });
+        var p = document.getElementById('section-projects');
+        if(p){
+          p.classList.add('active','dh-active-section');
+          p.style.setProperty('display','block','important');
+        }
+        renderProjectsV15();
+        var title = document.querySelector('.main-title');
+        if(title) title.textContent = 'Мои проекты';
+        return;
+      }
+      if(typeof oldShow === 'function') return oldShow(name);
+    };
+
+    var params = new URLSearchParams(location.search || '');
+    if(params.get('section') === 'projects') window.showSection('projects');
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootV15);
+  else bootV15();
+})();
+</script>
+<!-- /DocsHelper Projects/Payments UI Patch v15 -->
+
+
+<!-- DocsHelper Final HTML Sanity Patch v16 -->
+<style id="dh-final-sanity-v16">
+  html, body { max-width: 100% !important; }
+  body.dh-tg-miniapp #auth-screen,
+  html.dh-tg-miniapp #auth-screen {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  body.dh-tg-miniapp #app,
+  html.dh-tg-miniapp #app {
+    display: flex !important;
+  }
+  body.dh-tg-miniapp [id^="section-"]:not(.dh-active-section):not(.active) {
+    display: none !important;
+  }
+  body.dh-tg-miniapp #section-chat.dh-active-section,
+  body.dh-tg-miniapp #section-chat.active {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  body.dh-tg-miniapp .formula-math-field,
+  body.dh-tg-miniapp math-field,
+  body.dh-tg-miniapp .formula-input {
+    display: block !important;
+    width: 100% !important;
+    clear: both !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+  body.dh-tg-miniapp textarea.formula-input,
+  body.dh-tg-miniapp .formula-input {
+    min-height: 150px !important;
+  }
+  #owner-secret-entry {
+    position: fixed !important;
+    right: 10px !important;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    z-index: 2147483647 !important;
+  }
+</style>
+<script id="dh-final-sanity-v16">
+(function(){
+  'use strict';
+
+  function isTg(){ return !!(window.Telegram && window.Telegram.WebApp); }
+  function setLS(k,v){ try{ localStorage.setItem(k,String(v)); }catch(e){} }
+
+  function ensureTg(){
+    if(!isTg()) return;
+    document.documentElement.classList.add('dh-tg-miniapp');
+    document.body.classList.add('dh-tg-miniapp');
+
+    try{ Telegram.WebApp.ready(); }catch(e){}
+    try{ Telegram.WebApp.expand(); }catch(e){}
+
+    var user = (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) || {};
+    var id = user.id || 'guest';
+    var name = [user.first_name,user.last_name].filter(Boolean).join(' ') || user.username || 'Telegram User';
+
+    setLS('dh_logged_in','1');
+    setLS('dh_web_auth','1');
+    setLS('dh_email_verified_current','1');
+    setLS('dh_web_email','tg_' + id);
+    setLS('dh_web_name', name);
+    setLS('dh_tg_user_id', id);
+
+    var auth = document.getElementById('auth-screen');
+    var app = document.getElementById('app');
+    if(auth) auth.style.setProperty('display','none','important');
+    if(app) app.style.setProperty('display','flex','important');
+
+    var n = document.querySelector('.user-badge-name');
+    if(n) n.textContent = name;
+    var a = document.querySelector('.user-badge-avatar');
+    if(a) a.textContent = String(name).charAt(0).toUpperCase();
+  }
+
+  function ensureOwner(){
+    var btn = document.getElementById('owner-secret-entry');
+    if(!btn){
+      btn = document.createElement('button');
+      btn.id = 'owner-secret-entry';
+      btn.type = 'button';
+      btn.textContent = 'v1';
+      btn.style.cssText = 'position:fixed;right:10px;bottom:10px;z-index:2147483647;border:0;border-radius:999px;padding:7px 10px;background:rgba(99,102,241,.9);color:#fff;font-weight:800;font-size:12px;';
+      document.body.appendChild(btn);
+    }
+    btn.onclick = function(){
+      if(window.showSection) window.showSection('admin');
+      else {
+        var admin = document.getElementById('section-admin');
+        if(admin) admin.style.display = 'block';
+      }
+    };
+  }
+
+  function boot(){
+    ensureTg();
+    ensureOwner();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  window.addEventListener('load', boot);
+})();
+</script>
+<!-- /DocsHelper Final HTML Sanity Patch v16 -->
 
 </body>
 </html>
