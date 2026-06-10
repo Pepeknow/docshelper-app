@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocsHelper — Engineer Service Entry</title>
-<script src="https://telegram.org/js/telegram-widget.js?22" async>
+<title>DocsHelper — Stable Final</title>
+<script>
 // ── Secret Admin MVP ──
-const ADMIN_PASSWORD = 'admin123';
+const ADMIN_PASSWORD = 'TocHem183';
 
 function getAdminSubscriptions(){try{return JSON.parse(localStorage.getItem('dh_admin_subscriptions')||'{}')}catch(e){return {}}}
 function saveAdminSubscriptions(data){localStorage.setItem('dh_admin_subscriptions',JSON.stringify(data))}
@@ -453,7 +453,6 @@ window.addEventListener('load', () => setTimeout(initializeSectionRouter, 150));
 setTimeout(initializeSectionRouter, 500);
 
 </script>
-<script defer src="https://unpkg.com/mathlive"></script>
 <style>
 /* ── Variables ── */
 :root{
@@ -3742,6 +3741,224 @@ body{
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════
+   FINAL STABILIZER — one section at a time, stable desktop layout
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Reset old owner floating entry */
+.owner-secret-entry{display:none!important;}
+
+/* Owner entry inside engineer */
+.engineer-owner-entry-wrap{
+  display:flex!important;
+  justify-content:flex-end!important;
+  max-width:900px!important;
+  margin:-6px auto 14px!important;
+}
+.engineer-owner-entry{
+  border:1px solid rgba(100,116,139,.18)!important;
+  background:rgba(255,255,255,.60)!important;
+  color:rgba(100,116,139,.72)!important;
+  border-radius:10px!important;
+  padding:7px 11px!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+}
+.engineer-owner-entry:hover{
+  color:var(--accent)!important;
+  background:rgba(20,184,166,.10)!important;
+  border-color:rgba(20,184,166,.22)!important;
+}
+
+/* Hide every main section by default */
+#section-chat,
+#section-files,
+#section-docs,
+#section-engineer,
+#section-excel,
+#section-raffle,
+#section-sub,
+#section-admin{
+  display:none!important;
+}
+
+/* Show only selected section */
+body[data-dh-section="chat"] #section-chat{display:flex!important;}
+body[data-dh-section="files"] #section-files{display:block!important;}
+body[data-dh-section="docs"] #section-docs{display:block!important;}
+body[data-dh-section="engineer"] #section-engineer{display:block!important;}
+body[data-dh-section="excel"] #section-excel{display:block!important;}
+body[data-dh-section="raffle"] #section-raffle{display:block!important;}
+body[data-dh-section="sub"] #section-sub{display:block!important;}
+body[data-dh-section="admin"] #section-admin{display:block!important;}
+
+/* Active nav */
+.nav-link.active{
+  background:rgba(99,102,241,.14)!important;
+  color:var(--accent)!important;
+}
+
+/* Desktop: real app layout */
+@media screen and (min-width:901px){
+  html,body{
+    width:100%!important;
+    height:100%!important;
+    margin:0!important;
+    overflow:hidden!important;
+  }
+  #app{
+    display:grid!important;
+    grid-template-columns:330px minmax(0,1fr)!important;
+    grid-template-rows:100vh!important;
+    width:100vw!important;
+    height:100vh!important;
+    overflow:hidden!important;
+  }
+  .sidebar{
+    grid-column:1!important;
+    grid-row:1!important;
+    position:relative!important;
+    width:330px!important;
+    min-width:330px!important;
+    max-width:330px!important;
+    height:100vh!important;
+    min-height:100vh!important;
+    max-height:100vh!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    border-right:1px solid var(--border)!important;
+    border-bottom:none!important;
+  }
+  .main{
+    grid-column:2!important;
+    grid-row:1!important;
+    position:relative!important;
+    min-width:0!important;
+    width:auto!important;
+    height:100vh!important;
+    display:flex!important;
+    flex-direction:column!important;
+    overflow:hidden!important;
+  }
+  .sidebar-nav{
+    display:flex!important;
+    flex-direction:column!important;
+    flex-wrap:nowrap!important;
+    gap:8px!important;
+    overflow:visible!important;
+  }
+  .nav-link{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    flex:0 0 auto!important;
+    display:flex!important;
+    justify-content:flex-start!important;
+    align-items:center!important;
+    white-space:normal!important;
+  }
+
+  body[data-dh-section="chat"] #section-chat{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    height:100vh!important;
+    overflow:hidden!important;
+    flex-direction:column!important;
+  }
+  #section-chat .chat-area,
+  #section-chat #chat-area{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+  }
+  #section-chat .input-area{
+    flex:0 0 auto!important;
+    position:relative!important;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:100%!important;
+    border-top:1px solid var(--border)!important;
+    z-index:10!important;
+  }
+
+  #section-files,
+  #section-docs,
+  #section-engineer,
+  #section-excel,
+  #section-raffle,
+  #section-sub,
+  #section-admin{
+    height:100vh!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    padding:24px!important;
+  }
+}
+
+/* Mobile/tablet */
+@media screen and (max-width:900px){
+  html,body{
+    width:100%!important;
+    min-height:100%!important;
+    overflow-x:hidden!important;
+  }
+  #app{
+    display:flex!important;
+    flex-direction:column!important;
+    width:100vw!important;
+    min-height:100vh!important;
+    overflow-x:hidden!important;
+  }
+  .sidebar{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow-x:hidden!important;
+  }
+  .main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    flex:1 1 auto!important;
+    overflow-x:hidden!important;
+  }
+  .sidebar-nav{
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    max-width:100vw!important;
+    scrollbar-width:none!important;
+  }
+  .sidebar-nav::-webkit-scrollbar{display:none!important;}
+  .nav-link{
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+  }
+  #section-chat,
+  #section-files,
+  #section-docs,
+  #section-engineer,
+  #section-excel,
+  #section-raffle,
+  #section-sub,
+  #section-admin{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:0!important;
+    overflow-x:hidden!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3994,6 +4211,11 @@ body{
           <p>Вводи формулы, данные или расчёты. DocsHelper может рассчитать, проверить ошибки, объяснить решение и собрать аккуратный расчётный лист для отчёта.</p>
         </div>
 
+        
+        <div class="engineer-owner-entry-wrap">
+          <button class="engineer-owner-entry" type="button" onclick="openOwnerSecret()">Сервис</button>
+        </div>
+
         <div class="engineering-tools-grid">
           <button class="engineering-card" onclick="insertEngineeringTemplate('ohm')">
             <div class="engineering-icon">⚡</div>
@@ -4216,11 +4438,7 @@ H = 0.15 m"></textarea>
     
       <section class="content-section owner-hidden" id="section-admin">
         <div class="section-title">⚙️ Панель управления</div>
-        <div class="engineer-owner-entry-wrap">
-          <button class="engineer-owner-entry" onclick="openOwnerSecret()">Сервис</button>
-        </div>
-
-        <div class="section-subtitle">Статистика, пользователи и ручная выдача подписок.</div>
+<div class="section-subtitle">Статистика, пользователи и ручная выдача подписок.</div>
 
         <div class="admin-lock-card" id="admin-lock-card">
           <div class="admin-lock-icon">⚙️</div>
@@ -5278,6 +5496,136 @@ function textToPdfPrint() {
   const w = window.open('', '_blank');
   if (!w) { alert('Браузер заблокировал окно. Разреши всплывающие окна.'); return; }
   w.document.write(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>DocsHelper PDF</title><style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.65;color:#111;}h1{font-size:22px;margin-bottom:18px}.meta{font-size:12px;color:#666;margin-bottom:24px;}.content{white-space:pre-wrap;font-size:15px;}@media print{body{padding:24px;}}</style></head><body><h1>Документ DocsHelper</h1><div class="meta">Сформировано в DocsHelper</div><div class="content">${safeText}</div><script>setTimeout(()=>window.print(),500)<\/script>
+
+<script>
+/* FINAL STABILIZER JS — runs after all old scripts */
+(function(){
+  const SECTIONS = ['chat','files','docs','engineer','excel','raffle','sub','admin'];
+
+  function sectionEl(name){
+    return document.getElementById('section-' + name);
+  }
+
+  function setActiveNav(name){
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    const nav = document.getElementById('nav-' + name);
+    if(nav) nav.classList.add('active');
+  }
+
+  function forceSection(name){
+    if(!SECTIONS.includes(name)) name = 'chat';
+
+    document.body.setAttribute('data-dh-section', name);
+
+    SECTIONS.forEach(s => {
+      const el = sectionEl(s);
+      if(!el) return;
+      const active = s === name;
+      el.style.setProperty('display', active ? (s === 'chat' ? 'flex' : 'block') : 'none', 'important');
+      el.classList.toggle('active', active);
+    });
+
+    setActiveNav(name);
+
+    if(name === 'admin'){
+      const admin = sectionEl('admin');
+      if(admin){
+        admin.classList.remove('owner-hidden');
+        admin.classList.add('owner-visible');
+      }
+      if(typeof renderAdminPanel === 'function'){
+        setTimeout(renderAdminPanel, 60);
+      }
+      const pass = document.getElementById('admin-password');
+      if(pass) setTimeout(() => pass.focus(), 120);
+    }
+  }
+
+  function installServiceButton(){
+    const engineer = sectionEl('engineer');
+    if(!engineer) return;
+
+    let btn = document.getElementById('engineer-service-entry');
+    if(btn) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'engineer-owner-entry-wrap';
+    wrap.innerHTML = '<button class="engineer-owner-entry" id="engineer-service-entry" type="button">Сервис</button>';
+
+    const hero = engineer.querySelector('.engineering-hero');
+    if(hero && hero.parentNode){
+      hero.parentNode.insertBefore(wrap, hero.nextSibling);
+    } else {
+      engineer.insertBefore(wrap, engineer.firstChild);
+    }
+
+    btn = document.getElementById('engineer-service-entry');
+    if(btn){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        forceSection('admin');
+      });
+    }
+  }
+
+  function installNavHandlers(){
+    SECTIONS.forEach(name => {
+      const nav = document.getElementById('nav-' + name);
+      if(nav){
+        nav.onclick = function(e){
+          e.preventDefault();
+          forceSection(name);
+        };
+      }
+    });
+  }
+
+  window.showSection = function(name){
+    if(name === 'subscription' || name === 'plans') name = 'sub';
+    forceSection(name);
+  };
+
+  window.openOwnerSecret = function(){
+    forceSection('admin');
+  };
+
+  window.closeOwnerCabinet = function(){
+    forceSection('engineer');
+  };
+
+  function init(){
+    installServiceButton();
+    installNavHandlers();
+
+    const current = document.body.getAttribute('data-dh-section');
+    if(current && SECTIONS.includes(current)){
+      forceSection(current);
+      return;
+    }
+
+    // Start from chat unless user clicked a menu before this script loaded.
+    forceSection('chat');
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.addEventListener('load', function(){
+    setTimeout(init, 50);
+    setTimeout(() => forceSection(document.body.getAttribute('data-dh-section') || 'chat'), 600);
+  });
+
+  // Prevent old timers from re-showing multiple sections.
+  setInterval(function(){
+    const current = document.body.getAttribute('data-dh-section') || 'chat';
+    forceSection(current);
+  }, 1500);
+})();
+</script>
+
 </body></html>`);
   w.document.close();
   setDocOutput('<strong>Готово:</strong> открылось окно печати. Выбери “Сохранить как PDF”.');
