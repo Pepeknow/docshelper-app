@@ -1,5 +1,5 @@
-# server.py — DocsHelper stable backend v1
-# Backend для стабильной версии DocsHelper.
+# server.py — DocsHelper stable backend v1.1
+# Backend без psycopg2. Используется современный psycopg[binary].
 #
 # Render Environment:
 # DATABASE_URL=строка Neon PostgreSQL
@@ -11,7 +11,6 @@
 # Neon → Project → Connection Details → pooled connection string.
 
 import os
-import json
 import uuid
 import hmac
 import hashlib
@@ -19,9 +18,9 @@ import logging
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-import psycopg2
-import psycopg2.extras
-from psycopg2.pool import SimpleConnectionPool
+import psycopg
+from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -37,27 +36,35 @@ if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is missing. Add Neon DATABASE_URL in Render Environment.")
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": [ALLOWED_ORIGIN, "http://localhost:5500", "http://127.0.0.1:5500"]}})
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [
+                ALLOWED_ORIGIN,
+                "https://pepeknow.github.io",
+                "http://localhost:5500",
+                "http://127.0.0.1:5500",
+            ]
+        }
+    },
+)
 
-pool = SimpleConnectionPool(minconn=1, maxconn=8, dsn=DATABASE_URL)
+pool = ConnectionPool(
+    conninfo=DATABASE_URL,
+    min_size=1,
+    max_size=8,
+    kwargs={"row_factory": dict_row},
+)
 
 
 def now_utc():
     return datetime.now(timezone.utc)
 
 
-def db_conn():
-    return pool.getconn()
-
-
-def db_put(conn):
-    pool.putconn(conn)
-
-
 def query(sql, params=None, one=False, commit=False):
-    conn = db_conn()
-    try:
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
             cur.execute(sql, params or ())
             rows = None
             if cur.description:
@@ -67,11 +74,6 @@ def query(sql, params=None, one=False, commit=False):
             if one:
                 return rows[0] if rows else None
             return rows
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        db_put(conn)
 
 
 def init_db():
@@ -139,17 +141,11 @@ def init_db():
     CREATE INDEX IF NOT EXISTS idx_projects_user_created ON projects(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_payments_user_created ON payments(user_id, created_at DESC);
     """
-    conn = db_conn()
-    try:
+    with pool.connection() as conn:
         with conn.cursor() as cur:
             cur.execute(schema)
         conn.commit()
-        logging.info("Database initialized")
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        db_put(conn)
+    logging.info("Database initialized")
 
 
 def make_ref_code():
@@ -196,6 +192,18 @@ def api_error(message, status=400, extra=None):
     return jsonify(payload), status
 
 
+def serialize_row(row):
+    if not row:
+        return None
+    out = {}
+    for k, v in dict(row).items():
+        if isinstance(v, (datetime,)):
+            out[k] = v.isoformat()
+        else:
+            out[k] = str(v) if k.endswith("_id") or k == "id" else v
+    return out
+
+
 def get_active_subscription(user_id):
     return query(
         """
@@ -220,21 +228,21 @@ def user_payload(user):
         "ref_code": user["ref_code"],
         "invited_by": user["invited_by"],
         "docscoin": user["docscoin"],
-        "subscription": dict(sub) if sub else None,
+        "subscription": serialize_row(sub) if sub else None,
         "has_raffle_access": bool(sub) or bool(user["invited_by"]),
     }
 
 
 @app.get("/")
 def root():
-    return jsonify({"ok": True, "service": "DocsHelper backend", "version": "1.0"})
+    return jsonify({"ok": True, "service": "DocsHelper backend", "version": "1.1"})
 
 
 @app.get("/health")
 def health():
     try:
         row = query("SELECT 1 AS ok", one=True)
-        return jsonify({"ok": True, "db": row["ok"] == 1})
+        return jsonify({"ok": True, "db": row["ok"] == 1, "version": "1.1"})
     except Exception as exc:
         logging.exception("health failed")
         return jsonify({"ok": False, "error": str(exc)}), 500
@@ -258,9 +266,6 @@ def auth_guest():
         token = sign_token(existing["id"])
         return api_ok({"token": token, "user": user_payload(existing)})
 
-    ref_code = make_ref_code()
-    user_id = uuid.uuid4()
-
     inviter = None
     if invited_by:
         inviter = query("SELECT * FROM users WHERE ref_code=%s", (str(invited_by),), one=True)
@@ -271,29 +276,37 @@ def auth_guest():
         VALUES (%s,%s,%s,%s,%s,%s)
         RETURNING *
         """,
-        (str(user_id), str(tg_id) if tg_id else None, str(email).lower() if email else None, name, ref_code, str(invited_by) if inviter else None),
+        (
+            str(uuid.uuid4()),
+            str(tg_id) if tg_id else None,
+            str(email).lower() if email else None,
+            name,
+            make_ref_code(),
+            str(invited_by) if inviter else None,
+        ),
         one=True,
         commit=True,
     )
 
     if inviter and str(inviter["id"]) != str(user["id"]):
-        try:
-            query(
-                """
-                INSERT INTO referrals (id, inviter_id, invited_user_id, reward_docscoin)
-                VALUES (%s,%s,%s,1000)
-                ON CONFLICT (inviter_id, invited_user_id) DO NOTHING
-                """,
-                (str(uuid.uuid4()), str(inviter["id"]), str(user["id"])),
-                commit=True,
-            )
-            query("UPDATE users SET docscoin = docscoin + 1000, updated_at=NOW() WHERE id=%s", (str(inviter["id"]),), commit=True)
-        except Exception:
-            logging.exception("referral credit failed")
+        query(
+            """
+            INSERT INTO referrals (id, inviter_id, invited_user_id, reward_docscoin)
+            VALUES (%s,%s,%s,1000)
+            ON CONFLICT (inviter_id, invited_user_id) DO NOTHING
+            """,
+            (str(uuid.uuid4()), str(inviter["id"]), str(user["id"])),
+            commit=True,
+        )
+        query(
+            "UPDATE users SET docscoin = docscoin + 1000, updated_at=NOW() WHERE id=%s",
+            (str(inviter["id"]),),
+            commit=True,
+        )
 
     token = sign_token(user["id"])
-    user = query("SELECT * FROM users WHERE id=%s", (str(user["id"]),), one=True)
-    return api_ok({"token": token, "user": user_payload(user)})
+    fresh_user = query("SELECT * FROM users WHERE id=%s", (str(user["id"]),), one=True)
+    return api_ok({"token": token, "user": user_payload(fresh_user)})
 
 
 @app.get("/api/me")
@@ -318,7 +331,7 @@ def list_projects():
         """,
         (request.user_id,),
     )
-    return api_ok({"projects": [dict(r) for r in rows]})
+    return api_ok({"projects": [serialize_row(r) for r in rows]})
 
 
 @app.post("/api/projects")
@@ -339,7 +352,7 @@ def create_project():
         one=True,
         commit=True,
     )
-    return api_ok({"project": dict(row)}, 201)
+    return api_ok({"project": serialize_row(row)}, 201)
 
 
 @app.delete("/api/projects/<project_id>")
@@ -366,7 +379,7 @@ def referrals():
     return api_ok({
         "ref_code": user["ref_code"],
         "docscoin": user["docscoin"],
-        "referrals": [dict(r) for r in rows],
+        "referrals": [serialize_row(r) for r in rows],
     })
 
 
@@ -396,7 +409,7 @@ def admin_grant():
         one=True,
         commit=True,
     )
-    return api_ok({"subscription": dict(sub)})
+    return api_ok({"subscription": serialize_row(sub)})
 
 
 if __name__ == "__main__":
